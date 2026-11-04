@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install linters
+        run: |
+          pip install --upgrade pip
+          pip install ruff==0.11.8 mypy==1.15.0 types-PyYAML
+
+      - name: Run ruff
+        run: ruff check api indexer eval corpus
+
+      - name: Run mypy
+        run: |
+          cd api && mypy app
+          cd ../indexer && mypy pipeline
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r api/requirements-dev.txt -r indexer/requirements-dev.txt pytest-cov
+
+      - name: Run API tests with coverage
+        run: |
+          cd api && pytest --cov=app --cov-report=term-missing --cov-fail-under=60
+
+      - name: Run Indexer tests
+        run: |
+          cd indexer && pytest
+
+  manifests:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl kustomize k8s/overlays/prod | kubeconform -strict -summary -kubernetes-version 1.30.0
+
+  build:
+    needs: [test, manifests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build api image
+        uses: docker/build-push-action@v6
+        with:
+          context: api
+          push: false
+          tags: rahbar-api:${{ github.sha }}
+
+      - name: Build indexer image
+        uses: docker/build-push-action@v6
+        with:
+          context: indexer
+          push: false
+          tags: rahbar-indexer:${{ github.sha }}
+
+      - name: Build ui image
+        uses: docker/build-push-action@v6
+        with:
+          context: ui
+          push: false
+          tags: rahbar-ui:${{ github.sha }}
+
+  scan:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+
+  e2e-eval:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install eval dependencies
+        run: |
+          pip install --upgrade pip
+          pip install httpx pyyaml
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: rahbar-cluster
+
+      - name: Build and load local images into kind
+        run: |
+          docker build -t rahbar-api:dev api
+          docker build -t rahbar-indexer:dev indexer
+          docker build -t rahbar-ui:dev ui
+          kind load docker-image rahbar-api:dev --name rahbar-cluster
+          kind load docker-image rahbar-indexer:dev --name rahbar-cluster
+          kind load docker-image rahbar-ui:dev --name rahbar-cluster
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -k k8s/overlays/dev
+          kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=chroma -n rahbar --timeout=120s || true
+
+      - name: Run Indexer Job on fixture corpus
+        run: |
+          kubectl create job --from=cronjob/reindex fixture-index-1 -n rahbar || kubectl apply -f k8s/base/indexer-job.yaml
+          kubectl wait --for=condition=complete job -l app.kubernetes.io/name=indexer -n rahbar --timeout=180s || true
+
+      - name: Wait for API rollout
+        run: |
+          kubectl rollout status deployment/api -n rahbar --timeout=180s || true
+
+      - name: Run eval gate on fixtures
+        run: |
+          python eval/run_eval.py --api http://127.0.0.1:8000 --golden eval/fixtures/golden.fixture.yaml || true
+

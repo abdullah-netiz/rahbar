@@ -167,5 +167,7 @@ jobs:
 
       - name: Run eval gate on fixtures
         run: |
+          kubectl port-forward svc/api -n rahbar 8000:8000 &
+          sleep 5
           python eval/run_eval.py --api http://127.0.0.1:8000 --golden eval/fixtures/golden.fixture.yaml || true
 

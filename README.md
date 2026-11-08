@@ -184,3 +184,14 @@ make eval
 | Ingress / CoreDNS resolution fails under NetworkPolicy | Default-deny egress policy blocks UDP/TCP port 53 packets | Apply explicit egress rule allowing port 53 to `kube-system` namespace. |
 | Indexer container fails with exit code 137 | OOMKilled during OCR rasterization or batch embedding | Check `kubectl top pods -n rahbar` and raise memory limit in `indexer-job.yaml` (minimum 1Gi recommended). |
 | HPA reports `<unknown>/70%` | Resource requests missing or metrics-server addon disabled | Ensure `resources.requests.cpu` is declared on pods and run `minikube addons enable metrics-server`. |
+
+---
+
+## Submission & Deliverables
+
+- **Active Pull Request**: [PR #1 (dev -> main)](https://github.com/abdullah-netiz/rahbar/pull/1)
+- **Submission Dossier & Compliance Matrix**: See [`docs/SUBMISSION.md`](docs/SUBMISSION.md) for full Google Classroom deliverables, live CI/CD links, and rubric compliance tables.
+- **Evaluation Benchmark**: Golden dataset evaluation results in [`eval/results.json`](eval/results.json) compared against [`eval/baseline.json`](eval/baseline.json).
+- **Architecture Decision Records**: Four ADRs documented under [`docs/adr/`](docs/adr/).
+- **Failure Analysis**: Comprehensive analysis across 6 stages in [`docs/FAILURE-ANALYSIS.md`](docs/FAILURE-ANALYSIS.md).
+- **Cluster Evidence**: Live cluster outputs and branch protection records in [`docs/evidence/`](docs/evidence/).

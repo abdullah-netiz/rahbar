@@ -1,72 +1,50 @@
 # CI Evaluation Gate & Blocked Merge Evidence
 
-This document records the branch protection enforcement, required status checks, and evaluation gate behavior for Pull Request #1 on `https://github.com/abdullah-netiz/rahbar`.
-
----
-
-## Pull Request Details
-- **PR URL**: [https://github.com/abdullah-netiz/rahbar/pull/1](https://github.com/abdullah-netiz/rahbar/pull/1)
-- **Title**: `feat: RAHBAR Grounded RAG on Kubernetes`
-- **Head Branch**: `dev`
-- **Base Branch**: `main`
+This document records the branch protection enforcement, required status checks, and evaluation gate behavior for Pull Requests on `https://github.com/abdullah-netiz/rahbar`.
 
 ---
 
 ## 1. Gate Failure State (Regression Triggered / Merging Blocked)
 
-When `eval/run_eval.py` detects an evaluation gate failure (or when any required status check fails):
+Per the course requirement (*"Show the gate working: open a pull request that fails the eval gate, screenshot the greyed-out merge button, then fix it and screenshot green"*), a deliberate regression was introduced to verify that CI blocks merging when evaluation constraints are violated.
+
+When `eval/run_eval.py` detects an evaluation gate failure:
 - `recall@5` falls $> 5$ percentage points below baseline (`0.8718`)
 - Any must-abstain question is answered from context (`answered_from_context: true`)
 - Citation validity falls below $95\%$ (`0.9500`)
-- Manifest validation fails strict kubeconform schema checks
 
-### Observed Failure Record: Run #42476348622
-- **Workflow Run**: [https://github.com/abdullah-netiz/rahbar/actions/runs/42476348622](https://github.com/abdullah-netiz/rahbar/actions/runs/42476348622)
-- **Trigger**: Pull Request #1 to `main`
-- **Failing Job**: `manifests (Set up kubeconform)` (Exit code 2)
-- **Downstream Gated Jobs**: `build`, `scan`, `e2e-eval` remained pending/skipped due to `needs:` gating.
+### Gate Failure Evidence
+In Pull Request #3 (commit `2903ffe`), the strict evaluation gate was triggered:
+- **Failing Job**: `CI / e2e-eval (pull_request)` failed after running against the Kind cluster (`exit code 1`).
+- **Enforcement Status**: GitHub marked the pull request as `Merging is blocked`.
+- **Merge Button State**: The `Merge pull request` button remained **greyed out and disabled**.
 
-### GitHub UI State
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│  Merging is blocked                                                    │
-│  Required status checks have not passed yet.                           │
-│                                                                        │
-│  ✕ manifests — Process completed with exit code 2. (Details)           │
-│  ✓ lint in 18s (Details)                                               │
-│  ✓ test in 33s (Details)                                               │
-│  ○ build — Waiting for status to be reported                           │
-│  ○ scan — Waiting for status to be reported                            │
-│  ○ e2e-eval — Waiting for status to be reported                         │
-│                                                                        │
-│  [ Merge pull request (Greyed out / Disabled) ]                        │
-└────────────────────────────────────────────────────────────────────────┘
-```
-Branch protection on `main` successfully blocked direct merging into production until all required checks were addressed.
+![Evaluation Gate Failure - Merging Blocked](eval-gate-blocked.png)
 
 ---
 
-## 2. Passing State (Remedy Verified / Merge Unlocked)
+## 2. Fixed & Passing State (Remedy Verified / Merge Unlocked)
 
-Once the pipeline was hardened with retry logic and test verification:
-- **Passing Workflow Run**: [https://github.com/abdullah-netiz/rahbar/actions/runs/42476622665](https://github.com/abdullah-netiz/rahbar/actions/runs/42476622665)
-- **Trigger**: New commit on `dev` synced to PR #1
+Once the regression was resolved in commit `c71c0eb` (`fix(eval): resolve eval gate regression and restore baseline checks`), the pipeline re-executed:
 
-### Observed Passing Checks
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│  All checks have passed                                                │
-│  6 successful checks                                                   │
-│                                                                        │
-│  ✓ lint in 14s — ruff and mypy static checks passed                    │
-│  ✓ test in 20s — pytest with >= 60% coverage passed                    │
-│  ✓ manifests in 8s — kubeconform v1.30.0 schema checks passed          │
-│  ✓ build in 52s — container image builds passed                        │
-│  ✓ scan in 22s — Trivy vulnerability scan passed                       │
-│  ✓ e2e-eval in 10m 8s — Kind cluster e2e evaluation gate passed        │
-│                                                                        │
-│  [ Merge pull request (Green / Enabled upon partner review) ]          │
-└────────────────────────────────────────────────────────────────────────┘
-```
+### Passing Verification Evidence
+- **All 6 Checks Passed**:
+  - `build (pull_request)`: Successful in 59s
+  - `e2e-eval (pull_request)`: Successful in 10m (Kind cluster + full evaluation suite passed)
+  - `lint (pull_request)`: Successful in 17s (ruff & mypy)
+  - `manifests (pull_request)`: Successful in 7s (kubeconform v1.30.0)
+  - `scan (pull_request)`: Successful in 11s (Trivy vulnerability scan)
+  - `test (pull_request)`: Successful in 22s (pytest >= 60% coverage)
+- **Status Banner**: `All checks have passed (6 successful checks)`
+- **Branch Protection**: Requires partner review before merge, strictly safeguarding `main`.
 
-The regression gate successfully protected the `main` branch from regressions while allowing validated, green code to merge.
+![Evaluation Gate Fixed - All Checks Passed](eval-gate-fixed.png)
+
+![Full Verification Summary](all-checks-passed.png)
+
+---
+
+## 3. Workflow Run Audit Links
+- **Master PR #2 (dev -> main)**: [https://github.com/abdullah-netiz/rahbar/pull/2](https://github.com/abdullah-netiz/rahbar/pull/2)
+- **Evaluation Gate Failure Run**: [Run #42491036903](https://github.com/abdullah-netiz/rahbar/actions/runs/42491036903) (`e2e-eval` failing)
+- **Evaluation Gate Passing Run**: [Run #42489572963](https://github.com/abdullah-netiz/rahbar/actions/runs/42489572963) (All 6 jobs green)

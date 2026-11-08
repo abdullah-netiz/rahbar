@@ -172,3 +172,15 @@ make ask Q="What CGPA puts a student on academic warning?"
 # Run evaluation gate against golden questions
 make eval
 ```
+
+---
+
+## Operations & Troubleshooting Matrix
+
+| Symptom | Root Cause | Immediate Remedy |
+|---|---|---|
+| `ImagePullBackOff` on locally built images | Minikube cannot access laptop Docker daemon | Run `minikube image load <image>:<tag>` and set `imagePullPolicy: IfNotPresent`. |
+| API pods stuck in `0/1 READY` | Readiness probe failing due to unindexed Chroma or embedding model mismatch | Check `kubectl describe pod -n rahbar` and `kubectl logs -n rahbar -l app=api`. Run indexing Job to populate collection. |
+| Ingress / CoreDNS resolution fails under NetworkPolicy | Default-deny egress policy blocks UDP/TCP port 53 packets | Apply explicit egress rule allowing port 53 to `kube-system` namespace. |
+| Indexer container fails with exit code 137 | OOMKilled during OCR rasterization or batch embedding | Check `kubectl top pods -n rahbar` and raise memory limit in `indexer-job.yaml` (minimum 1Gi recommended). |
+| HPA reports `<unknown>/70%` | Resource requests missing or metrics-server addon disabled | Ensure `resources.requests.cpu` is declared on pods and run `minikube addons enable metrics-server`. |

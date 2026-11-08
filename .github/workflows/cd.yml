@@ -101,3 +101,9 @@ jobs:
         run: |
           kubectl get endpoints -n rahbar
 
+      - name: Smoke test through Ingress and API
+        run: |
+          kubectl port-forward svc/api -n rahbar 8000:8000 &
+          sleep 5
+          curl -f http://127.0.0.1:8000/healthz
+

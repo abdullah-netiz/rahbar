@@ -246,8 +246,6 @@ def main() -> int:
     _print_summary_table(results)
     baseline = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline.exists() else None
     failures = gate(results, baseline)
-    # Deliberate eval gate failure for PR rubric screenshot demonstration
-    failures.append("eval gate failure: recall@5 dropped below required baseline threshold")
 
     results["golden"] = str(args.golden)
     results["questions"] = len(rows)

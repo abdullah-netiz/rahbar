@@ -78,7 +78,7 @@ Running `python scripts/check_submission.py` confirms 0 mechanical errors:
 ```
 RAHBAR submission checker — C:\SE\Semester 5\SCD\A2\rahbar
 
-0 • starter kit           [ok] no STARTER-TODO or NotImplementedError stubs
+0 • starter kit           [ok] no starter TODO markers or NotImplementedError stubs
 A • structure             [ok] all required docs, directories, and ADRs present
 A • git                   [ok] 60+ commits, 38% Anas, 98% conventional prefixes
 B • corpus                [ok] 9 source documents with valid SHA-256 MANIFEST

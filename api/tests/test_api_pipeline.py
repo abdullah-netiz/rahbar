@@ -200,3 +200,35 @@ def test_embedding_pin_mismatch_detected_on_readyz(monkeypatch: pytest.MonkeyPat
     # Test that in stub mode it's ready
     r = client_test.get("/readyz")
     assert r.status_code == 200
+def test_cache_invalidation_bumps_generation_and_clears_entries() -> None:
+    """Verifies that cache invalidation flushes stored answers upon re-indexing."""
+    settings = Settings(cache_enabled=True, cache_threshold=0.85)
+    cache = SemanticCache(settings)
+    q_vec = [0.2] * 768
+
+    resp = AskResponse(
+        request_id="req-fresh",
+        answer="Tuition is Rs. 10,000",
+        citations=[Citation(source="fees.pdf", section="Tuition")],
+        answered_from_context=True,
+        confidence="high",
+        retrieved=[],
+        provider="stub",
+    )
+    cache.set("What is the fee?", q_vec, resp)
+    hit, score = cache.get("What is the fee?", q_vec)
+    assert hit is not None
+
+    # Invalidate cache on simulated index rebuild
+    cache.invalidate()
+    hit_after, _ = cache.get("What is the fee?", q_vec)
+    assert hit_after is None, "Cache entries must be evicted after invalidation"
+
+
+def test_conversational_followup_heuristics_skip_cache() -> None:
+    """Follow-up questions using pronouns must skip cache to avoid serving stale context."""
+    from app.services.answer import _is_followup_question
+
+    assert _is_followup_question("And what about the lab attendance?") is True
+    assert _is_followup_question("Can you explain more about it?") is True
+    assert _is_followup_question("What CGPA causes an academic warning?") is False

@@ -1,0 +1,8 @@
+NAME                                CPU(cores)   MEMORY(bytes)   
+api-659c8db46b-2z8v9                18m          142Mi           
+api-659c8db46b-7x9k1                21m          138Mi           
+api-659c8db46b-m4n82                16m          145Mi           
+chroma-0                            45m          265Mi           
+indexer-job-8k2p1                   342m         588Mi           
+redis-54db7f7b4-n9x21               3m           28Mi            
+ui-7f89d8f94-k2x8m                  2m           14Mi            

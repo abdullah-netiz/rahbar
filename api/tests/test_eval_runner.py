@@ -13,7 +13,7 @@ from pathlib import Path
 EVAL_DIR = Path(__file__).resolve().parent.parent.parent / "eval"
 sys.path.insert(0, str(EVAL_DIR))
 
-from run_eval import citation_validity, gate, recall_at_k, summarise
+from run_eval import citation_validity, gate, recall_at_k  # noqa: E402
 
 
 def test_recall_at_k_calculation() -> None:

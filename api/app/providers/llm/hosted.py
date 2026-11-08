@@ -14,7 +14,7 @@ import httpx
 from pydantic import ValidationError
 
 from ...config import Settings
-from ...routes.metrics import FALLBACKS, GENERATION_LATENCY, TOKENS_IN, TOKENS_OUT
+from ...routes.metrics import GENERATION_LATENCY, TOKENS_IN, TOKENS_OUT
 from ...schemas import Answer, Passage
 from .ollama import SYSTEM_PROMPT, build_evidence_block, safe_fallback_answer
 

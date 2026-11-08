@@ -7,7 +7,7 @@ Runs fully offline with stub/mock providers (no external network or model calls)
 
 from __future__ import annotations
 
-from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError

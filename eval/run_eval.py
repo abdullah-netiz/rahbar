@@ -165,6 +165,24 @@ def summarise(rows: list[dict]) -> dict:
     }
 
 
+def _print_summary_table(results: dict) -> None:
+    print("\n" + "=" * 55)
+    print("  RAHBAR EVALUATION METRIC SUMMARY")
+    print("=" * 55)
+    print(f"  recall@3:                {results.get('recall@3', 0.0):.4f}")
+    print(f"  recall@5:                {results.get('recall@5', 0.0):.4f}")
+    print(f"  citation validity:       {results.get('citation_validity', 0.0):.4f}")
+    print(f"  abstention correctness:  {results.get('abstention_correctness', 0.0):.4f}")
+    print("-" * 55)
+    print("  recall@5 by Question Type:")
+    for qtype, data in results.get("by_type", {}).items():
+        print(f"    - {qtype:<12}: {data.get('recall@5', 0.0):.4f} ({data.get('count', 0)} questions)")
+    lat = results.get("latency_seconds", {})
+    print("-" * 55)
+    print(f"  latency (mean / p95):    {lat.get('mean', 0.0):.3f}s / {lat.get('p95', 0.0):.3f}s")
+    print("=" * 55)
+
+
 def gate(results: dict, baseline: dict | None) -> list[str]:
     """Return one message per failed gate (section 5.4); an empty list means pass."""
     failures: list[str] = []
@@ -225,6 +243,7 @@ def main() -> int:
             print(f"  {q['id']:<5} {rows[-1]['seconds']:>6.2f}s  {q['question'][:60]}")
 
     results = summarise(rows)
+    _print_summary_table(results)
     baseline = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline.exists() else None
     failures = gate(results, baseline)
 

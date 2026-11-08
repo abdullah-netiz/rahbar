@@ -68,8 +68,10 @@ jobs:
 
       - name: Set up kubeconform
         run: |
-          curl -sL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          curl -fSL --retry 5 --retry-delay 2 https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz -o kubeconform.tar.gz
+          tar -xzf kubeconform.tar.gz
           sudo mv kubeconform /usr/local/bin/
+          rm -f kubeconform.tar.gz
 
       - name: Validate Kubernetes manifests
         run: |

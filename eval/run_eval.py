@@ -25,7 +25,7 @@ HERE = Path(__file__).resolve().parent
 # The gate from section 5.4. Change these only with a reason written in docs/PIPELINE.md.
 MAX_RECALL5_DROP = 0.05        # recall@5 may fall at most 5 points below the baseline
 MIN_CITATION_VALIDITY = 0.95   # at least 95% of citations must match retrieved passages
-REQUIRED_ABSTENTION = 1.0      # every must-abstain question must be declined
+REQUIRED_ABSTENTION = 1.5      # deliberate gate failure demonstration (impossible threshold)
 
 
 def load_golden(path: Path) -> list[dict]:

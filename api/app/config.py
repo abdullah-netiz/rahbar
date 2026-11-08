@@ -19,6 +19,13 @@ def _float(name: str, default: float) -> float:
     return float(os.environ.get(name, default))
 
 
+def _bool(name: str, default: bool) -> bool:
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    return val.lower() in ("true", "1", "yes")
+
+
 @dataclass(frozen=True)
 class Settings:
     # Which implementations to load. "stub" needs no cluster, no model, no network.
@@ -41,6 +48,15 @@ class Settings:
     hosted_base_url: str = ""        # e.g. an OpenAI-compatible endpoint
     llm_api_key: str = field(default="", repr=False)   # from the Secret; never log it
 
+    # Semantic cache & relevance floor
+    redis_host: str = "redis"
+    redis_port: int = 6379
+    cache_enabled: bool = True
+    cache_threshold: float = 0.90
+    cache_ttl: int = 86400
+    relevance_floor: float = 0.65
+    llm_timeout: float = 30.0
+
     log_level: str = "INFO"
 
 
@@ -58,5 +74,12 @@ def get_settings() -> Settings:
         ollama_url=os.environ.get("OLLAMA_URL", "http://host.minikube.internal:11434"),
         hosted_base_url=os.environ.get("HOSTED_BASE_URL", ""),
         llm_api_key=os.environ.get("LLM_API_KEY", ""),
+        redis_host=os.environ.get("REDIS_HOST", "redis"),
+        redis_port=_int("REDIS_PORT", 6379),
+        cache_enabled=_bool("CACHE_ENABLED", True),
+        cache_threshold=_float("CACHE_THRESHOLD", 0.90),
+        cache_ttl=_int("CACHE_TTL", 86400),
+        relevance_floor=_float("RELEVANCE_FLOOR", 0.65),
+        llm_timeout=_float("LLM_TIMEOUT", 30.0),
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
     )

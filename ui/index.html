@@ -398,7 +398,6 @@
   .spinning-triangle-box {
     width: 32px;
     height: 32px;
-    perspective: 500px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -408,8 +407,9 @@
   .spinning-triangle {
     width: 24px;
     height: 24px;
-    transform-style: preserve-3d;
-    animation: stylishVerticalSpin 2.0s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    animation: butterSmoothSpin 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
   }
 
   .thinking-label-container {
@@ -527,18 +527,26 @@
     color: #64748b;
   }
 
-  /* Stylish Vertical 3D Flip & Spin */
-  @keyframes stylishVerticalSpin {
+  /* Smooth like butter stylish rotation: 0° (Start) -> 90° (Clockwise) -> 180° (Inverted) -> 270° (Left) -> 360° (Back to Start) */
+  @keyframes butterSmoothSpin {
     0% {
-      transform: perspective(450px) rotateX(0deg) rotateZ(0deg) scale(1);
+      transform: rotate(0deg);
       filter: drop-shadow(0 0 8px rgba(0, 255, 135, 0.5));
     }
+    25% {
+      transform: rotate(90deg);
+      filter: drop-shadow(0 0 14px rgba(96, 239, 255, 0.75));
+    }
     50% {
-      transform: perspective(450px) rotateX(180deg) rotateZ(12deg) scale(1.18);
-      filter: drop-shadow(0 0 20px rgba(96, 239, 255, 0.9)) drop-shadow(0 0 8px rgba(0, 255, 135, 0.85));
+      transform: rotate(180deg);
+      filter: drop-shadow(0 0 18px rgba(0, 255, 135, 0.85)) drop-shadow(0 0 8px rgba(96, 239, 255, 0.65));
+    }
+    75% {
+      transform: rotate(270deg);
+      filter: drop-shadow(0 0 14px rgba(96, 239, 255, 0.75));
     }
     100% {
-      transform: perspective(450px) rotateX(360deg) rotateZ(0deg) scale(1);
+      transform: rotate(360deg);
       filter: drop-shadow(0 0 8px rgba(0, 255, 135, 0.5));
     }
   }
@@ -621,8 +629,12 @@ function createTriangleSVG() {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
   const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-  poly.setAttribute("points", "12,3 22,21 2,21");
+  // Mathematically centered equilateral triangle (centroid at exactly 12, 12) for zero-wobble butter spin
+  poly.setAttribute("points", "12,3.33 19.5,16.33 4.5,16.33");
   poly.setAttribute("fill", "url(#neonGrad)");
+  poly.setAttribute("stroke", "url(#neonGrad)");
+  poly.setAttribute("stroke-width", "2");
+  poly.setAttribute("stroke-linejoin", "round");
   svg.appendChild(poly);
   return svg;
 }

@@ -563,6 +563,131 @@
     fill: #090c10;
   }
 
+  /* Stop / Interrupt Mode for Send Button */
+  button#send.stop-mode {
+    background: #ef4444;
+    box-shadow: 0 2px 14px rgba(239, 68, 68, 0.5);
+    opacity: 1 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  button#send.stop-mode:hover {
+    background: #dc2626;
+    transform: scale(1.08);
+    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.7);
+  }
+
+  button#send.stop-mode svg {
+    width: 13px;
+    height: 13px;
+    fill: #ffffff;
+  }
+
+  /* Inline Stop Button inside Reasoning Bubble */
+  .stop-thinking-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .stop-thinking-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #fca5a5;
+  }
+
+  .stop-thinking-btn .stop-icon {
+    font-size: 8px;
+    color: #ef4444;
+  }
+
+  /* Interrupted / Stopped Message Bubble */
+  .interrupted-msg {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 14px;
+    font-size: 13.5px;
+    color: #fca5a5;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  .interrupt-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    color: #ef4444;
+  }
+
+  /* Floating Scroll-to-Bottom Arrow Button */
+  .scroll-bottom-btn {
+    position: fixed;
+    bottom: 92px;
+    left: 50%;
+    transform: translateX(-50%) translateY(14px);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(18, 26, 38, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(96, 239, 255, 0.4);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(96, 239, 255, 0.25);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease, border-color 0.2s ease;
+    z-index: 100;
+  }
+
+  .scroll-bottom-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .scroll-bottom-btn:hover {
+    background: rgba(0, 255, 135, 0.18);
+    border-color: rgba(0, 255, 135, 0.7);
+    box-shadow: 0 4px 22px rgba(0, 255, 135, 0.4);
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  .scroll-bottom-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: #60efff;
+    transition: transform 0.2s ease;
+  }
+
+  .scroll-bottom-btn:hover svg {
+    fill: #00ff87;
+    transform: translateY(2px);
+  }
+
   .hint {
     text-align: center;
     margin-top: 8px;
@@ -632,6 +757,10 @@
   
   <section id="thread" aria-live="polite"></section>
 </main>
+
+<button id="scroll-bottom-btn" type="button" aria-label="Scroll to bottom" class="scroll-bottom-btn" title="Scroll to bottom">
+  <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+</button>
 
 <form id="ask">
   <div class="bar-container">
@@ -769,10 +898,24 @@ function errorMessage(status, body) {
 }
 
 let isGenerating = false;
+let currentAbortController = null;
+const scrollBottomBtn = document.getElementById("scroll-bottom-btn");
 
 function updateSendState() {
+  if (isGenerating) {
+    // In generating mode, the send button is the active STOP button
+    send.disabled = false;
+    return;
+  }
   const hasText = input.value.trim().length > 0;
-  send.disabled = isGenerating || !hasText;
+  send.disabled = !hasText;
+}
+
+function abortGeneration() {
+  if (currentAbortController) {
+    currentAbortController.abort();
+    currentAbortController = null;
+  }
 }
 
 function setGenerating(generating) {
@@ -780,8 +923,16 @@ function setGenerating(generating) {
   input.disabled = generating;
   if (generating) {
     input.placeholder = "Generating response… please wait…";
+    send.classList.add("stop-mode");
+    send.setAttribute("aria-label", "Stop generating");
+    send.setAttribute("title", "Stop response");
+    send.innerHTML = `<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>`;
   } else {
     input.placeholder = "Ask about academic rules, fees, grading, attendance...";
+    send.classList.remove("stop-mode");
+    send.setAttribute("aria-label", "Send question");
+    send.setAttribute("title", "Send question");
+    send.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
   }
   document.querySelectorAll(".quick-chip").forEach((btn) => {
     btn.disabled = generating;
@@ -792,8 +943,26 @@ function setGenerating(generating) {
 // Initial check on page load
 updateSendState();
 
+// Scroll to bottom button toggle based on viewport scroll position
+function checkScrollPosition() {
+  const distFromBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+  if (distFromBottom > 70) {
+    scrollBottomBtn.classList.add("visible");
+  } else {
+    scrollBottomBtn.classList.remove("visible");
+  }
+}
+
+window.addEventListener("scroll", checkScrollPosition, { passive: true });
+window.addEventListener("resize", checkScrollPosition, { passive: true });
+
+scrollBottomBtn.addEventListener("click", () => {
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+});
+
 async function ask(question) {
   if (isGenerating) return;
+  currentAbortController = new AbortController();
   setGenerating(true);
 
   thread.append(el("div", { class: "q" }, question));
@@ -813,9 +982,20 @@ async function ask(question) {
   labelCol.appendChild(phaseLabel);
   labelCol.appendChild(statusText);
   thinkingWrapper.appendChild(labelCol);
+
+  // Inline Stop / Interrupt button in the reasoning bubble
+  const stopBtn = el("button", { class: "stop-thinking-btn", type: "button", title: "Stop response" });
+  stopBtn.innerHTML = `<span class="stop-icon">■</span> Stop`;
+  stopBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    abortGeneration();
+  });
+  thinkingWrapper.appendChild(stopBtn);
   
   thread.append(thinkingWrapper);
-  thinkingWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+
+  // Take user to the very bottom only when user enters a new prompt (like Gemini)
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
 
   // Gemini-style dynamic thought steps
   const thoughts = [
@@ -840,6 +1020,7 @@ async function ask(question) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
+      signal: currentAbortController.signal,
     });
     let body = null;
     try { body = await res.json(); } catch { /* non-JSON error page */ }
@@ -855,11 +1036,18 @@ async function ask(question) {
   } catch (err) {
     clearInterval(thoughtInterval);
     thinkingWrapper.remove();
-    thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
+    if (err.name === "AbortError") {
+      const interruptCard = el("div", { class: "interrupted-msg" });
+      interruptCard.innerHTML = `<span class="interrupt-badge">Interrupted</span> Response was stopped.`;
+      thread.append(interruptCard);
+    } else {
+      thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
+    }
   } finally {
+    currentAbortController = null;
     setGenerating(false);
     input.focus();
-    thread.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "end" });
+    // Do NOT scroll to bottom when system gives an answer (keeps user scroll position)
   }
 }
 
@@ -875,7 +1063,10 @@ document.querySelectorAll(".quick-chip").forEach((btn) => {
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  if (isGenerating) return;
+  if (isGenerating) {
+    abortGeneration();
+    return;
+  }
   const q = input.value.trim();
   if (q.length < 3) return;
   input.value = "";
@@ -894,7 +1085,9 @@ input.addEventListener("input", () => {
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { 
     e.preventDefault(); 
-    if (!isGenerating && input.value.trim().length >= 3) {
+    if (isGenerating) {
+      abortGeneration();
+    } else if (input.value.trim().length >= 3) {
       form.requestSubmit(); 
     }
   }

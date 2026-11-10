@@ -55,7 +55,7 @@ class Settings:
     cache_threshold: float = 0.90
     cache_ttl: int = 86400
     relevance_floor: float = 0.65
-    llm_timeout: float = 30.0
+    llm_timeout: float = 90.0
 
     log_level: str = "INFO"
 
@@ -80,6 +80,6 @@ def get_settings() -> Settings:
         cache_threshold=_float("CACHE_THRESHOLD", 0.90),
         cache_ttl=_int("CACHE_TTL", 86400),
         relevance_floor=_float("RELEVANCE_FLOOR", 0.65),
-        llm_timeout=_float("LLM_TIMEOUT", 30.0),
+        llm_timeout=_float("LLM_TIMEOUT", 90.0),
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
     )

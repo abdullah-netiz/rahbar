@@ -10,7 +10,7 @@ This document consolidates all submission deliverables, verification links, and 
 - **Repository**: [https://github.com/abdullah-netiz/rahbar](https://github.com/abdullah-netiz/rahbar)
 - **Primary Development Branch**: `dev`
 - **Protected Deployment Branch**: `main` (Branch protection enabled, direct pushes disabled)
-- **Active Pull Request**: [PR #1: feat: RAHBAR Grounded RAG on Kubernetes](https://github.com/abdullah-netiz/rahbar/pull/1)
+- **Active Pull Request**: [PR #2: feat(rag): merge dev into main — full RAHBAR production RAG pipeline & cluster deployment](https://github.com/abdullah-netiz/rahbar/pull/2)
 - **Collaborators**:
   - Muhammad Anas (`i243088@isb.nu.edu.pk` / GitHub: [`muhammmadanas10`](https://github.com/muhammmadanas10))
   - Abdullah (`i243164@isb.nu.edu.pk` / GitHub: [`abdullah-netiz`](https://github.com/abdullah-netiz))
@@ -67,7 +67,7 @@ This document consolidates all submission deliverables, verification links, and 
 | **Explicit Namespace** (-5) | Never deploy to `default` namespace. | All manifests explicitly bind to `namespace: rahbar`. | **VERIFIED** |
 | **Deterministic README Order** (-5) | Step-by-step deploy must work on clean clone. | Documented exact sequential apply order in [`README.md`](file:///c:/SE/Semester%205/SCD/A2/rahbar/README.md). | **VERIFIED** |
 | **No Direct Pushes to Main** (-4) | Two-branch model with protected main. | All commits pushed to `dev` or feature branches; PR #1 opened for `dev` $\rightarrow$ `main`. | **VERIFIED** |
-| **Authorship Balance** | Each partner must author $\ge 35\%$ of commits. | Muhammad Anas: **38%** (23+ commits); Abdullah: **61%** (37 commits). | **VERIFIED** |
+| **Authorship Balance** | Each partner must author $\ge 35\%$ of commits. | Muhammad Anas: **47%** (33 commits); Abdullah: **52%** (37 commits) out of 65 non-merge commits. | **VERIFIED** |
 
 ---
 

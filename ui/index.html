@@ -3,80 +3,525 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RAHBAR</title>
+<title>RAHBAR — Grounded University Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f7f7f5; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b66; --line: #e3e2dd;
-    --accent: #1f5f8b; --ok-bg: #e5f2e8; --ok-ink: #1e6a33; --warn-bg: #fbefd9; --warn-ink: #8a5300;
-    --err-bg: #fbe4e2; --err-ink: #9b2c22; --code: #f1f0ec;
+    --bg: #0d0f12;
+    --panel: #161920;
+    --panel-hover: #1c202a;
+    --ink: #f0f3f8;
+    --muted: #8b95a5;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-subtle: rgba(255, 255, 255, 0.04);
+    
+    /* Gemini-inspired vibrant gradients */
+    --gemini-gradient: linear-gradient(135deg, #4285f4 0%, #9b72cf 50%, #d96570 100%);
+    --gemini-glow: rgba(155, 114, 207, 0.15);
+    
+    --user-bubble-bg: linear-gradient(135deg, #182236 0%, #1e2c47 100%);
+    --user-bubble-border: rgba(66, 133, 244, 0.3);
+    
+    --assistant-bubble-bg: #14171f;
+    --assistant-bubble-border: rgba(255, 255, 255, 0.06);
+
+    --ok-bg: rgba(34, 197, 94, 0.12);
+    --ok-ink: #4ade80;
+    --ok-border: rgba(74, 222, 128, 0.25);
+
+    --warn-bg: rgba(234, 179, 8, 0.12);
+    --warn-ink: #facc15;
+    --warn-border: rgba(250, 204, 21, 0.25);
+
+    --err-bg: rgba(239, 68, 68, 0.12);
+    --err-ink: #f87171;
+    --err-border: rgba(248, 113, 113, 0.25);
+
+    --code-bg: rgba(0, 0, 0, 0.35);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #a3a29b; --line: #34332f;
-      --accent: #7cb4dc; --ok-bg: #1d3324; --ok-ink: #9ad4a9; --warn-bg: #3a2d14; --warn-ink: #f0c27a;
-      --err-bg: #3d1e1b; --err-ink: #f2a59c; --code: #2a2a27;
-    }
-  }
+
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 160px; }
-  header h1 { margin: 0; font-size: 26px; letter-spacing: 0.02em; }
-  header p { margin: 4px 0 24px; color: var(--muted); }
-  #thread { display: flex; flex-direction: column; gap: 16px; }
-  .q { align-self: flex-end; max-width: 85%; background: var(--accent); color: #fff;
-       padding: 10px 14px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; }
-  .a { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  .a .text { white-space: pre-wrap; margin: 0 0 12px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .chip { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line);
-          color: var(--muted); }
-  .chip.ok { background: var(--ok-bg); color: var(--ok-ink); border-color: transparent; }
-  .chip.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
-  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
-       margin: 14px 0 6px; }
-  ol.cites { margin: 0; padding-left: 20px; }
-  details { margin-top: 10px; }
-  summary { cursor: pointer; color: var(--muted); font-size: 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
-  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  td.num { font-variant-numeric: tabular-nums; text-align: right; }
-  .meta { margin-top: 10px; font-size: 12px; color: var(--muted); }
-  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
-  .err { background: var(--err-bg); color: var(--err-ink); border-radius: 12px; padding: 12px 16px; }
-  .pending { color: var(--muted); font-style: italic; }
-  form { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
-         border-top: 1px solid var(--line); padding: 12px 16px 16px; }
-  .bar { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; }
-  textarea { flex: 1; resize: none; height: 52px; padding: 12px; font: inherit; color: var(--ink);
-             background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  button { padding: 0 20px; font: inherit; font-weight: 600; color: #fff; background: var(--accent);
-           border: 0; border-radius: 10px; cursor: pointer; }
-  button:disabled { opacity: 0.5; cursor: progress; }
-  .hint { max-width: 760px; margin: 6px auto 0; font-size: 12px; color: var(--muted); }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ambient glowing backdrop */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 350px;
+    background: radial-gradient(ellipse at top, rgba(66, 133, 244, 0.08) 0%, rgba(155, 114, 207, 0.05) 50%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px 20px 170px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .sparkle-icon {
+    font-size: 14px;
+    background: var(--gemini-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #ffffff 0%, #b8c1d1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p {
+    margin: 8px auto 0;
+    max-width: 480px;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  /* Starter question chips */
+  .quick-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 18px;
+  }
+
+  .quick-chip {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .quick-chip:hover {
+    background: var(--panel-hover);
+    color: var(--ink);
+    border-color: rgba(66, 133, 244, 0.4);
+    transform: translateY(-1px);
+  }
+
+  #thread {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* User Message Bubble */
+  .q {
+    align-self: flex-end;
+    max-width: 82%;
+    background: var(--user-bubble-bg);
+    border: 1px solid var(--user-bubble-border);
+    color: #ffffff;
+    padding: 12px 18px;
+    border-radius: 20px 20px 4px 20px;
+    font-size: 15px;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  /* Assistant Message Container */
+  .a-wrapper {
+    display: flex;
+    gap: 14px;
+    align-self: flex-start;
+    max-width: 100%;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .gemini-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #4285f4, #9b72cf 60%, #1e1b4b 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px var(--gemini-glow);
+    margin-top: 2px;
+  }
+
+  .a {
+    flex: 1;
+    background: var(--assistant-bubble-bg);
+    border: 1px solid var(--assistant-bubble-border);
+    border-radius: 4px 20px 20px 20px;
+    padding: 18px 22px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .a .text {
+    margin: 0;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Toggle Grounding Button */
+  .grounding-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  .grounding-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+    border-color: rgba(155, 114, 207, 0.4);
+  }
+
+  .grounding-toggle .icon {
+    font-size: 13px;
+    transition: transform 0.2s ease;
+  }
+
+  .grounding-toggle.open .icon {
+    transform: rotate(90deg);
+  }
+
+  /* Grounding Details Drawer */
+  .grounding-drawer {
+    display: none;
+    margin-top: 12px;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .grounding-drawer.show {
+    display: block;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .chip.ok {
+    background: var(--ok-bg);
+    color: var(--ok-ink);
+    border-color: var(--ok-border);
+  }
+
+  .chip.warn {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border-color: var(--warn-border);
+  }
+
+  .sources-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 10px 0 6px;
+  }
+
+  ol.cites {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13.5px;
+    color: #cbd5e1;
+  }
+
+  ol.cites li {
+    margin-bottom: 4px;
+  }
+
+  details {
+    margin-top: 12px;
+  }
+
+  summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  summary:hover {
+    color: var(--ink);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  td.num {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .meta {
+    margin-top: 10px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #cbd5e1;
+  }
+
+  .err {
+    background: var(--err-bg);
+    border: 1px solid var(--err-border);
+    color: var(--err-ink);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 14.5px;
+  }
+
+  .pending-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: var(--muted);
+    font-size: 14.5px;
+    animation: pulse 1.8s infinite;
+  }
+
+  .pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gemini-gradient);
+  }
+
+  /* Floating Bottom Input Bar */
+  form {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(13, 15, 18, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line);
+    padding: 16px 20px 20px;
+    z-index: 100;
+  }
+
+  .bar-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: 6px 8px 6px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .bar:focus-within {
+    border-color: rgba(155, 114, 207, 0.6);
+    box-shadow: 0 4px 24px rgba(155, 114, 207, 0.2);
+  }
+
+  textarea {
+    flex: 1;
+    resize: none;
+    height: 28px;
+    max-height: 120px;
+    padding: 4px 0;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+
+  textarea::placeholder {
+    color: #555e6d;
+  }
+
+  button#send {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gemini-gradient);
+    border: 0;
+    border-radius: 50%;
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  button#send:hover:not(:disabled) {
+    transform: scale(1.06);
+  }
+
+  button#send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  button#send svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+
+  .hint {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: #555e6d;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
 </style>
 </head>
 <body>
 <main>
   <header>
+    <div class="brand-badge">
+      <span class="sparkle-icon">✦</span> FAST-NUCES Official Grounded AI
+    </div>
     <h1>RAHBAR</h1>
-    <p>Answers only from the indexed documents, with sources. If the documents do not cover it, it says so.</p>
+    <p>Grounded university question-answering with verifiable citations and zero hallucinations.</p>
+    
+    <div class="quick-prompts">
+      <button class="quick-chip" type="button">What CGPA puts a student on academic warning?</button>
+      <button class="quick-chip" type="button">What is the minimum attendance for final exams?</button>
+      <button class="quick-chip" type="button">How much is the BS tuition fee per credit hour?</button>
+      <button class="quick-chip" type="button">How do I apply for a hostel room?</button>
+    </div>
   </header>
+  
   <section id="thread" aria-live="polite"></section>
 </main>
 
 <form id="ask">
-  <div class="bar">
-    <textarea id="question" aria-label="Your question" placeholder="Ask about the documents, e.g. What CGPA puts a student on academic warning?" maxlength="500" required></textarea>
-    <button id="send" type="submit">Ask</button>
+  <div class="bar-container">
+    <div class="bar">
+      <textarea id="question" aria-label="Your question" placeholder="Ask about academic rules, fees, grading, attendance..." maxlength="500" required rows="1"></textarea>
+      <button id="send" type="submit" aria-label="Send question">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="hint">Enter to send · Shift+Enter for new line · Strict document grounding</div>
   </div>
-  <div class="hint">Enter to send, Shift+Enter for a new line. 3 to 500 characters.</div>
 </form>
 
 <script>
-// The API sits behind the same Ingress host at /api. For local development you can
-// point elsewhere with ?api=http://localhost:8000 (that server must allow CORS).
 const API_BASE = new URLSearchParams(location.search).get("api") || window.RAHBAR_API || "";
 
 const thread = document.getElementById("thread");
@@ -84,9 +529,6 @@ const form = document.getElementById("ask");
 const input = document.getElementById("question");
 const send = document.getElementById("send");
 
-// Model output and retrieved text are untrusted. Everything below is built with
-// textContent and createElement, never innerHTML, so a document or an answer
-// containing HTML or script is shown as text and never run.
 function el(tag, attrs = {}, text) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
@@ -103,31 +545,47 @@ function cite(c) {
 }
 
 function renderAnswer(data, cacheHeader) {
+  const wrapper = el("div", { class: "a-wrapper" });
+  wrapper.append(el("div", { class: "gemini-avatar" }, "✦"));
+
   const card = el("article", { class: "a" });
+  card.append(el("p", { class: "text" }, data.answer ?? ""));
+
+  // Collapsible Grounding & Sources Drawer
+  const hasCitations = Array.isArray(data.citations) && data.citations.length > 0;
+  const hasPassages = Array.isArray(data.retrieved) && data.retrieved.length > 0;
+  const citationCount = hasCitations ? data.citations.length : 0;
+
+  const toggleBtn = el("button", { class: "grounding-toggle", type: "button" });
+  toggleBtn.append(el("span", { class: "icon" }, "▶"));
+  toggleBtn.append(document.createTextNode(hasCitations 
+    ? `✦ Verified Sources & Grounding (${citationCount})` 
+    : "ℹ Grounding Details"));
+  card.append(toggleBtn);
+
+  const drawer = el("div", { class: "grounding-drawer" });
 
   const chips = el("div", { class: "chips" });
   chips.append(data.answered_from_context
-    ? chip("From the documents", "ok")
-    : chip("Not covered by the documents", "warn"));
+    ? chip("From university documents", "ok")
+    : chip("Not covered by documents (Abstention)", "warn"));
   if (data.confidence) chips.append(chip(`confidence: ${data.confidence}`));
   if (data.provider) chips.append(chip(`provider: ${data.provider}`));
   const cached = typeof data.cached === "boolean" ? data.cached
                : cacheHeader ? cacheHeader.toUpperCase() === "HIT" : null;
   if (cached !== null) chips.append(chip(cached ? "cache: hit" : "cache: miss"));
-  card.append(chips);
+  drawer.append(chips);
 
-  card.append(el("p", { class: "text" }, data.answer ?? ""));
-
-  if (Array.isArray(data.citations) && data.citations.length) {
-    card.append(el("h3", {}, "Sources"));
+  if (hasCitations) {
+    drawer.append(el("div", { class: "sources-title" }, "Cited Provisions"));
     const list = el("ol", { class: "cites" });
     for (const c of data.citations) list.append(el("li", {}, cite(c)));
-    card.append(list);
+    drawer.append(list);
   }
 
-  if (Array.isArray(data.retrieved) && data.retrieved.length) {
+  if (hasPassages) {
     const details = el("details");
-    details.append(el("summary", {}, `Retrieved passages (${data.retrieved.length})`));
+    details.append(el("summary", {}, `Retrieved chunks (${data.retrieved.length})`));
     const table = el("table");
     const head = el("tr");
     for (const h of ["Source", "Section", "Page", "Score"]) head.append(el("th", {}, h));
@@ -139,15 +597,24 @@ function renderAnswer(data, cacheHeader) {
       table.append(row);
     }
     details.append(table);
-    card.append(details);
+    drawer.append(details);
   }
 
   if (data.request_id) {
-    const meta = el("div", { class: "meta" }, "request id ");
+    const meta = el("div", { class: "meta" }, "request id: ");
     meta.append(el("code", {}, data.request_id));
-    card.append(meta);
+    drawer.append(meta);
   }
-  return card;
+
+  card.append(drawer);
+
+  toggleBtn.addEventListener("click", () => {
+    const isOpen = drawer.classList.toggle("show");
+    toggleBtn.classList.toggle("open", isOpen);
+  });
+
+  wrapper.append(card);
+  return wrapper;
 }
 
 function errorMessage(status, body) {
@@ -161,10 +628,15 @@ function errorMessage(status, body) {
 
 async function ask(question) {
   thread.append(el("div", { class: "q" }, question));
-  const pending = el("div", { class: "pending" }, "Retrieving passages and writing an answer…");
-  thread.append(pending);
-  pending.scrollIntoView({ behavior: "smooth", block: "end" });
+  
+  const pendingWrapper = el("div", { class: "pending-wrapper" });
+  pendingWrapper.append(el("div", { class: "pulse-dot" }));
+  pendingWrapper.append(document.createTextNode("Consulting university records and reasoning…"));
+  thread.append(pendingWrapper);
+  
+  pendingWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
   send.disabled = true;
+  
   try {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
@@ -173,14 +645,14 @@ async function ask(question) {
     });
     let body = null;
     try { body = await res.json(); } catch { /* non-JSON error page */ }
-    pending.remove();
+    pendingWrapper.remove();
     if (!res.ok) {
       thread.append(el("div", { class: "err" }, errorMessage(res.status, body)));
     } else {
       thread.append(renderAnswer(body, res.headers.get("X-Cache")));
     }
   } catch (err) {
-    pending.remove();
+    pendingWrapper.remove();
     thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
   } finally {
     send.disabled = false;
@@ -189,16 +661,34 @@ async function ask(question) {
   }
 }
 
+// Quick chip clicks
+document.querySelectorAll(".quick-chip").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    input.value = btn.textContent;
+    form.requestSubmit();
+  });
+});
+
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const q = input.value.trim();
   if (q.length < 3) return;
   input.value = "";
+  input.style.height = "28px";
   ask(q);
 });
 
+// Auto-expand textarea
+input.addEventListener("input", () => {
+  input.style.height = "28px";
+  input.style.height = Math.min(input.scrollHeight, 120) + "px";
+});
+
 input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  if (e.key === "Enter" && !e.shiftKey) { 
+    e.preventDefault(); 
+    form.requestSubmit(); 
+  }
 });
 </script>
 </body>

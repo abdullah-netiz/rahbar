@@ -9,27 +9,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0f12;
-    --panel: #161920;
-    --panel-hover: #1c202a;
-    --ink: #f0f3f8;
-    --muted: #8b95a5;
+    --bg: #090c10;
+    --panel: #11161d;
+    --panel-hover: #161e27;
+    --ink: #f0f6fc;
+    --muted: #8b949e;
     --line: rgba(255, 255, 255, 0.08);
     --line-subtle: rgba(255, 255, 255, 0.04);
     
-    /* Gemini-inspired vibrant gradients */
-    --gemini-gradient: linear-gradient(135deg, #4285f4 0%, #9b72cf 50%, #d96570 100%);
-    --gemini-glow: rgba(155, 114, 207, 0.15);
+    /* Neon Green & Electric Blue / Cyan Gradient */
+    --neon-gradient: linear-gradient(135deg, #00ff87 0%, #60efff 50%, #0061ff 100%);
+    --neon-glow: rgba(0, 255, 135, 0.22);
+    --cyan-glow: rgba(96, 239, 255, 0.25);
     
-    --user-bubble-bg: linear-gradient(135deg, #182236 0%, #1e2c47 100%);
-    --user-bubble-border: rgba(66, 133, 244, 0.3);
+    /* User & Assistant Bubble Themes */
+    --user-bubble-bg: linear-gradient(135deg, #0e1e24 0%, #112d38 100%);
+    --user-bubble-border: rgba(96, 239, 255, 0.35);
     
-    --assistant-bubble-bg: #14171f;
-    --assistant-bubble-border: rgba(255, 255, 255, 0.06);
+    --assistant-bubble-bg: #11151c;
+    --assistant-bubble-border: rgba(255, 255, 255, 0.07);
 
-    --ok-bg: rgba(34, 197, 94, 0.12);
-    --ok-ink: #4ade80;
-    --ok-border: rgba(74, 222, 128, 0.25);
+    --ok-bg: rgba(0, 255, 135, 0.12);
+    --ok-ink: #00ff87;
+    --ok-border: rgba(0, 255, 135, 0.3);
 
     --warn-bg: rgba(234, 179, 8, 0.12);
     --warn-ink: #facc15;
@@ -39,7 +41,7 @@
     --err-ink: #f87171;
     --err-border: rgba(248, 113, 113, 0.25);
 
-    --code-bg: rgba(0, 0, 0, 0.35);
+    --code-bg: rgba(0, 0, 0, 0.45);
   }
 
   * { box-sizing: border-box; }
@@ -56,32 +58,32 @@
     flex-direction: column;
   }
 
-  /* Ambient glowing backdrop */
+  /* Ambient glowing backdrop with neon cyan and green */
   body::before {
     content: "";
     position: fixed;
-    top: 0;
+    top: -50px;
     left: 50%;
     transform: translateX(-50%);
-    width: 600px;
-    height: 350px;
-    background: radial-gradient(ellipse at top, rgba(66, 133, 244, 0.08) 0%, rgba(155, 114, 207, 0.05) 50%, transparent 70%);
+    width: 750px;
+    height: 420px;
+    background: radial-gradient(ellipse at top, rgba(96, 239, 255, 0.10) 0%, rgba(0, 255, 135, 0.06) 45%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
 
   main {
-    max-width: 800px;
+    max-width: 820px;
     width: 100%;
     margin: 0 auto;
-    padding: 32px 20px 170px;
+    padding: 36px 20px 170px;
     flex: 1;
     position: relative;
     z-index: 1;
   }
 
   header {
-    margin-bottom: 32px;
+    margin-bottom: 34px;
     text-align: center;
   }
 
@@ -89,47 +91,49 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 5px 14px;
+    padding: 6px 16px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--line);
+    background: rgba(0, 255, 135, 0.05);
+    border: 1px solid rgba(96, 239, 255, 0.2);
     font-size: 13px;
     font-weight: 500;
-    color: var(--muted);
-    margin-bottom: 12px;
+    color: #cbd5e1;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
   }
 
-  .sparkle-icon {
-    font-size: 14px;
-    background: var(--gemini-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .triangle-badge-icon {
+    width: 13px;
+    height: 13px;
+    fill: url(#neonGrad);
+    display: inline-block;
+    filter: drop-shadow(0 0 6px rgba(0, 255, 135, 0.6));
   }
 
   header h1 {
     margin: 0;
-    font-size: 32px;
+    font-size: 34px;
     font-weight: 700;
     letter-spacing: -0.02em;
-    background: linear-gradient(180deg, #ffffff 0%, #b8c1d1 100%);
+    background: linear-gradient(180deg, #ffffff 10%, #94a3b8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   header p {
     margin: 8px auto 0;
-    max-width: 480px;
+    max-width: 500px;
     color: var(--muted);
     font-size: 14.5px;
   }
 
-  /* Starter question chips */
+  /* Quick Suggestion Chips */
   .quick-prompts {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    margin-top: 18px;
+    margin-top: 20px;
   }
 
   .quick-chip {
@@ -146,7 +150,8 @@
   .quick-chip:hover {
     background: var(--panel-hover);
     color: var(--ink);
-    border-color: rgba(66, 133, 244, 0.4);
+    border-color: rgba(96, 239, 255, 0.4);
+    box-shadow: 0 0 12px rgba(96, 239, 255, 0.15);
     transform: translateY(-1px);
   }
 
@@ -156,18 +161,18 @@
     gap: 22px;
   }
 
-  /* User Message Bubble */
+  /* User Message Bubble with Neon Accent */
   .q {
     align-self: flex-end;
     max-width: 82%;
     background: var(--user-bubble-bg);
     border: 1px solid var(--user-bubble-border);
     color: #ffffff;
-    padding: 12px 18px;
+    padding: 13px 19px;
     border-radius: 20px 20px 4px 20px;
     font-size: 15px;
     white-space: pre-wrap;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     animation: fadeIn 0.25s ease-out;
   }
 
@@ -180,19 +185,24 @@
     animation: fadeIn 0.3s ease-out;
   }
 
-  .gemini-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #4285f4, #9b72cf 60%, #1e1b4b 100%);
+  /* Triangle Avatar */
+  .avatar-triangle {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 255, 135, 0.1) 0%, rgba(96, 239, 255, 0.12) 100%);
+    border: 1px solid rgba(96, 239, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    color: #fff;
     flex-shrink: 0;
-    box-shadow: 0 2px 12px var(--gemini-glow);
+    box-shadow: 0 2px 14px var(--neon-glow);
     margin-top: 2px;
+  }
+
+  .avatar-triangle svg {
+    width: 18px;
+    height: 18px;
   }
 
   .a {
@@ -201,7 +211,7 @@
     border: 1px solid var(--assistant-bubble-border);
     border-radius: 4px 20px 20px 20px;
     padding: 18px 22px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
   }
 
   .a .text {
@@ -232,13 +242,13 @@
   }
 
   .grounding-toggle:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 255, 135, 0.06);
     color: var(--ink);
-    border-color: rgba(155, 114, 207, 0.4);
+    border-color: rgba(0, 255, 135, 0.35);
   }
 
   .grounding-toggle .icon {
-    font-size: 13px;
+    font-size: 11px;
     transition: transform 0.2s ease;
   }
 
@@ -251,7 +261,7 @@
     display: none;
     margin-top: 12px;
     padding: 14px;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.35);
     border: 1px solid var(--line);
     border-radius: 12px;
     animation: fadeIn 0.2s ease-out;
@@ -371,20 +381,58 @@
     font-size: 14.5px;
   }
 
-  .pending-wrapper {
+  /* Immersive Thinking & Spinning Triangle Indicator */
+  .thinking-wrapper {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     align-items: center;
-    color: var(--muted);
-    font-size: 14.5px;
-    animation: pulse 1.8s infinite;
+    background: var(--assistant-bubble-bg);
+    border: 1px solid var(--assistant-bubble-border);
+    border-radius: 20px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    max-width: 460px;
+    animation: fadeIn 0.25s ease-out;
   }
 
-  .pulse-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--gemini-gradient);
+  .spinning-triangle-box {
+    width: 32px;
+    height: 32px;
+    perspective: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .spinning-triangle {
+    width: 22px;
+    height: 22px;
+    transform-style: preserve-3d;
+    animation: naturalAxisSpin 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 135, 0.55));
+  }
+
+  .thinking-label-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .thinking-phase {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--neon-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .thinking-status-text {
+    font-size: 14px;
+    color: #cbd5e1;
+    transition: opacity 0.25s ease;
   }
 
   /* Floating Bottom Input Bar */
@@ -393,16 +441,16 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(13, 15, 18, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(9, 12, 16, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border-top: 1px solid var(--line);
     padding: 16px 20px 20px;
     z-index: 100;
   }
 
   .bar-container {
-    max-width: 800px;
+    max-width: 820px;
     margin: 0 auto;
   }
 
@@ -414,13 +462,13 @@
     border: 1px solid var(--line);
     border-radius: 28px;
     padding: 6px 8px 6px 18px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .bar:focus-within {
-    border-color: rgba(155, 114, 207, 0.6);
-    box-shadow: 0 4px 24px rgba(155, 114, 207, 0.2);
+    border-color: rgba(96, 239, 255, 0.6);
+    box-shadow: 0 4px 24px rgba(96, 239, 255, 0.2);
   }
 
   textarea {
@@ -438,7 +486,7 @@
   }
 
   textarea::placeholder {
-    color: #555e6d;
+    color: #4b5563;
   }
 
   button#send {
@@ -447,53 +495,70 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--gemini-gradient);
+    background: var(--neon-gradient);
     border: 0;
     border-radius: 50%;
-    color: #ffffff;
+    color: #090c10;
     cursor: pointer;
     transition: transform 0.15s ease, opacity 0.15s ease;
     flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0, 255, 135, 0.35);
   }
 
   button#send:hover:not(:disabled) {
-    transform: scale(1.06);
+    transform: scale(1.08);
   }
 
   button#send:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
+    box-shadow: none;
   }
 
   button#send svg {
     width: 18px;
     height: 18px;
-    fill: currentColor;
+    fill: #090c10;
   }
 
   .hint {
     text-align: center;
     margin-top: 8px;
     font-size: 11.5px;
-    color: #555e6d;
+    color: #64748b;
+  }
+
+  /* Smooth 3D Axis Spin Animation */
+  @keyframes naturalAxisSpin {
+    0% { transform: perspective(400px) rotateY(0deg); }
+    50% { transform: perspective(400px) rotateY(180deg) scale(1.1); }
+    100% { transform: perspective(400px) rotateY(360deg); }
   }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
 </style>
 </head>
 <body>
+
+<!-- Hidden SVG Gradients Definition -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ff87" />
+      <stop offset="50%" stop-color="#60efff" />
+      <stop offset="100%" stop-color="#0061ff" />
+    </linearGradient>
+  </defs>
+</svg>
+
 <main>
   <header>
     <div class="brand-badge">
-      <span class="sparkle-icon">✦</span> FAST-NUCES Official Grounded AI
+      <svg class="triangle-badge-icon" viewBox="0 0 24 24"><polygon points="12,3 22,21 2,21" fill="url(#neonGrad)"/></svg>
+      FAST-NUCES Official Grounded Assistant
     </div>
     <h1>RAHBAR</h1>
     <p>Grounded university question-answering with verifiable citations and zero hallucinations.</p>
@@ -544,9 +609,23 @@ function cite(c) {
   return c.page != null ? `${c.source} / ${c.section}, p. ${c.page}` : `${c.source} / ${c.section}`;
 }
 
+function createTriangleSVG() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  poly.setAttribute("points", "12,3 22,21 2,21");
+  poly.setAttribute("fill", "url(#neonGrad)");
+  svg.appendChild(poly);
+  return svg;
+}
+
 function renderAnswer(data, cacheHeader) {
   const wrapper = el("div", { class: "a-wrapper" });
-  wrapper.append(el("div", { class: "gemini-avatar" }, "✦"));
+  
+  // Triangle Avatar Icon
+  const avatar = el("div", { class: "avatar-triangle" });
+  avatar.appendChild(createTriangleSVG());
+  wrapper.append(avatar);
 
   const card = el("article", { class: "a" });
   card.append(el("p", { class: "text" }, data.answer ?? ""));
@@ -559,8 +638,8 @@ function renderAnswer(data, cacheHeader) {
   const toggleBtn = el("button", { class: "grounding-toggle", type: "button" });
   toggleBtn.append(el("span", { class: "icon" }, "▶"));
   toggleBtn.append(document.createTextNode(hasCitations 
-    ? `✦ Verified Sources & Grounding (${citationCount})` 
-    : "ℹ Grounding Details"));
+    ? `Verified Sources & Grounding (${citationCount})` 
+    : "Grounding Details"));
   card.append(toggleBtn);
 
   const drawer = el("div", { class: "grounding-drawer" });
@@ -629,14 +708,44 @@ function errorMessage(status, body) {
 async function ask(question) {
   thread.append(el("div", { class: "q" }, question));
   
-  const pendingWrapper = el("div", { class: "pending-wrapper" });
-  pendingWrapper.append(el("div", { class: "pulse-dot" }));
-  pendingWrapper.append(document.createTextNode("Consulting university records and reasoning…"));
-  thread.append(pendingWrapper);
+  // Immersive Thinking Indicator with 3D Spinning Triangle and Cycling Thought States
+  const thinkingWrapper = el("div", { class: "thinking-wrapper" });
   
-  pendingWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
+  const spinBox = el("div", { class: "spinning-triangle-box" });
+  const spinTri = createTriangleSVG();
+  spinTri.classList.add("spinning-triangle");
+  spinBox.appendChild(spinTri);
+  thinkingWrapper.appendChild(spinBox);
+  
+  const labelCol = el("div", { class: "thinking-label-container" });
+  const phaseLabel = el("div", { class: "thinking-phase" }, "Reasoning");
+  const statusText = el("div", { class: "thinking-status-text" }, "Thinking…");
+  labelCol.appendChild(phaseLabel);
+  labelCol.appendChild(statusText);
+  thinkingWrapper.appendChild(labelCol);
+  
+  thread.append(thinkingWrapper);
+  thinkingWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
   send.disabled = true;
-  
+
+  // Gemini-style dynamic thought steps
+  const thoughts = [
+    "Thinking…",
+    "Searching university handbooks & records…",
+    "Cross-referencing clause numbers & regulations…",
+    "Validating strict citation grounding…",
+    "Synthesizing response with zero hallucinations…"
+  ];
+  let thoughtIdx = 0;
+  const thoughtInterval = setInterval(() => {
+    thoughtIdx = (thoughtIdx + 1) % thoughts.length;
+    statusText.style.opacity = "0";
+    setTimeout(() => {
+      statusText.textContent = thoughts[thoughtIdx];
+      statusText.style.opacity = "1";
+    }, 200);
+  }, 2600);
+
   try {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
@@ -645,14 +754,18 @@ async function ask(question) {
     });
     let body = null;
     try { body = await res.json(); } catch { /* non-JSON error page */ }
-    pendingWrapper.remove();
+    
+    clearInterval(thoughtInterval);
+    thinkingWrapper.remove();
+    
     if (!res.ok) {
       thread.append(el("div", { class: "err" }, errorMessage(res.status, body)));
     } else {
       thread.append(renderAnswer(body, res.headers.get("X-Cache")));
     }
   } catch (err) {
-    pendingWrapper.remove();
+    clearInterval(thoughtInterval);
+    thinkingWrapper.remove();
     thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
   } finally {
     send.disabled = false;

@@ -155,6 +155,14 @@
     transform: translateY(-1px);
   }
 
+  .quick-chip:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+  }
+
   #thread {
     display: flex;
     flex-direction: column;
@@ -478,10 +486,43 @@
     padding: 4px 0;
     font: inherit;
     font-size: 15px;
+    line-height: 20px;
     color: var(--ink);
     background: transparent;
     border: 0;
     outline: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  textarea::-webkit-scrollbar,
+  textarea::-webkit-scrollbar-button,
+  textarea::-webkit-scrollbar-thumb,
+  textarea::-webkit-scrollbar-track,
+  textarea::-webkit-scrollbar-corner {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  textarea::-webkit-resizer {
+    display: none !important;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   textarea::placeholder {
@@ -509,9 +550,11 @@
   }
 
   button#send:disabled {
-    opacity: 0.35;
+    opacity: 0.28;
     cursor: not-allowed;
     box-shadow: none;
+    transform: none;
+    pointer-events: none;
   }
 
   button#send svg {
@@ -594,7 +637,7 @@
   <div class="bar-container">
     <div class="bar">
       <textarea id="question" aria-label="Your question" placeholder="Ask about academic rules, fees, grading, attendance..." maxlength="500" required rows="1"></textarea>
-      <button id="send" type="submit" aria-label="Send question">
+      <button id="send" type="submit" aria-label="Send question" disabled>
         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
     </div>
@@ -725,7 +768,34 @@ function errorMessage(status, body) {
   return `Request failed (HTTP ${status})${detail ? `: ${detail}` : "."}`;
 }
 
+let isGenerating = false;
+
+function updateSendState() {
+  const hasText = input.value.trim().length > 0;
+  send.disabled = isGenerating || !hasText;
+}
+
+function setGenerating(generating) {
+  isGenerating = generating;
+  input.disabled = generating;
+  if (generating) {
+    input.placeholder = "Generating response… please wait…";
+  } else {
+    input.placeholder = "Ask about academic rules, fees, grading, attendance...";
+  }
+  document.querySelectorAll(".quick-chip").forEach((btn) => {
+    btn.disabled = generating;
+  });
+  updateSendState();
+}
+
+// Initial check on page load
+updateSendState();
+
 async function ask(question) {
+  if (isGenerating) return;
+  setGenerating(true);
+
   thread.append(el("div", { class: "q" }, question));
   
   // Immersive Thinking Indicator with 3D Spinning Triangle and Cycling Thought States
@@ -746,7 +816,6 @@ async function ask(question) {
   
   thread.append(thinkingWrapper);
   thinkingWrapper.scrollIntoView({ behavior: "smooth", block: "end" });
-  send.disabled = true;
 
   // Gemini-style dynamic thought steps
   const thoughts = [
@@ -788,7 +857,7 @@ async function ask(question) {
     thinkingWrapper.remove();
     thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
   } finally {
-    send.disabled = false;
+    setGenerating(false);
     input.focus();
     thread.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "end" });
   }
@@ -797,30 +866,37 @@ async function ask(question) {
 // Quick chip clicks
 document.querySelectorAll(".quick-chip").forEach((btn) => {
   btn.addEventListener("click", () => {
+    if (isGenerating) return;
     input.value = btn.textContent;
+    updateSendState();
     form.requestSubmit();
   });
 });
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (isGenerating) return;
   const q = input.value.trim();
   if (q.length < 3) return;
   input.value = "";
   input.style.height = "28px";
+  updateSendState();
   ask(q);
 });
 
-// Auto-expand textarea
+// Auto-expand textarea & sync send button
 input.addEventListener("input", () => {
   input.style.height = "28px";
   input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  updateSendState();
 });
 
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { 
     e.preventDefault(); 
-    form.requestSubmit(); 
+    if (!isGenerating && input.value.trim().length >= 3) {
+      form.requestSubmit(); 
+    }
   }
 });
 </script>

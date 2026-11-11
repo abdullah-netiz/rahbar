@@ -42,6 +42,7 @@ class HostedProvider:
                 {"role": "user", "content": user_message},
             ],
             "temperature": self.settings.temperature,
+            "max_tokens": 512,
             "response_format": {"type": "json_object"},  # Constrained JSON mode
         }
 
@@ -66,8 +67,12 @@ class HostedProvider:
                     content = choices[0].get("message", {}).get("content", "")
                     TOKENS_OUT.inc(len(content) // 4)
 
-                    # Validate model output with Pydantic
-                    answer_obj = Answer.model_validate_json(content)
+                    # Defensive handling for JSON validation
+                    parsed = json.loads(content)
+                    if isinstance(parsed.get("confidence"), (int, float)):
+                        c_val = float(parsed["confidence"])
+                        parsed["confidence"] = "high" if c_val >= 0.8 else ("medium" if c_val >= 0.5 else "low")
+                    answer_obj = Answer.model_validate(parsed)
                     return answer_obj
 
                 except (httpx.HTTPError, json.JSONDecodeError, ValidationError, ValueError) as exc:

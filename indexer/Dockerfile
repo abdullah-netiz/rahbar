@@ -24,8 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy pipeline code
 COPY pipeline/ pipeline/
 
+# Copy corpus documents
+COPY data/ /corpus/
+
 # Set ownership
-RUN chown -R indexeruser:indexeruser /app
+RUN chown -R indexeruser:indexeruser /app /corpus
 
 USER indexeruser
 

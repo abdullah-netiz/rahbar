@@ -68,9 +68,7 @@ def safe_fallback_answer(reason: str) -> Answer:
 
 
 class OllamaProvider:
-    @property
-    def name(self) -> str:
-        return f"Ollama ({self.settings.llm_model})"
+    name = "ollama"
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings  # ollama_url, llm_model, temperature, llm_timeout

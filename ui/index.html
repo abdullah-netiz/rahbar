@@ -639,28 +639,26 @@
     color: #ef4444;
   }
 
-  /* Floating Scroll-to-Bottom Arrow Button */
+  /* Solid Floating Scroll-to-Bottom Arrow Button (Gemini Style) */
   .scroll-bottom-btn {
     position: fixed;
-    bottom: 136px;
+    bottom: 112px;
     left: 50%;
-    transform: translateX(-50%) translateY(14px);
-    width: 42px;
-    height: 42px;
+    transform: translateX(-50%) translateY(10px);
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.94);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1.5px solid rgba(96, 239, 255, 0.55);
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 0 16px rgba(96, 239, 255, 0.35);
-    color: #ffffff;
+    background: #21262d;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    color: #f0f6fc;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     z-index: 120;
   }
 
@@ -671,22 +669,196 @@
   }
 
   .scroll-bottom-btn:hover {
-    background: rgba(0, 255, 135, 0.22);
-    border-color: rgba(0, 255, 135, 0.85);
-    box-shadow: 0 6px 26px rgba(0, 255, 135, 0.5);
-    transform: translateX(-50%) translateY(-3px);
+    background: #30363d;
+    border-color: rgba(255, 255, 255, 0.32);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  .scroll-bottom-btn:active {
+    transform: translateX(-50%) translateY(0) scale(0.92);
   }
 
   .scroll-bottom-btn svg {
-    width: 24px;
-    height: 24px;
-    fill: #60efff;
-    transition: transform 0.2s ease, fill 0.2s ease;
+    width: 17px;
+    height: 17px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.15s ease;
   }
 
   .scroll-bottom-btn:hover svg {
-    fill: #00ff87;
-    transform: translateY(2px);
+    transform: translateY(1.5px);
+  }
+
+  /* Gemini-Style Sticky Top Nav & Model Switcher */
+  .gemini-top-nav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: rgba(9, 12, 16, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+
+  .gemini-nav-inner {
+    max-width: 820px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gemini-brand-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .gemini-brand-group .triangle-badge-icon {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* Gemini Model Switcher Dropdown Pill */
+  .gemini-model-selector {
+    position: relative;
+  }
+
+  .gemini-model-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+  }
+
+  .gemini-model-pill:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .gemini-model-pill:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .gemini-model-pill .chevron-icon {
+    width: 15px;
+    height: 15px;
+    fill: var(--muted);
+    transition: transform 0.2s ease;
+  }
+
+  .gemini-model-selector.open .gemini-model-pill .chevron-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Gemini Dropdown Menu */
+  .gemini-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 260px;
+    background: #161b22;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 200;
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  .gemini-model-selector.open .gemini-dropdown {
+    display: flex;
+  }
+
+  .gemini-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--ink);
+    text-align: left;
+    font-family: inherit;
+    transition: background 0.15s ease;
+    width: 100%;
+  }
+
+  .gemini-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  .gemini-dropdown-item.active {
+    background: rgba(96, 239, 255, 0.1);
+  }
+
+  .gemini-dropdown-item .item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .gemini-dropdown-item .item-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .gemini-dropdown-item.active .item-title {
+    color: #60efff;
+  }
+
+  .gemini-dropdown-item .item-desc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .gemini-dropdown-item .check-icon {
+    width: 16px;
+    height: 16px;
+    fill: #60efff;
+    opacity: 0;
+    flex-shrink: 0;
+    margin-left: 12px;
+    transition: opacity 0.15s ease;
+  }
+
+  .gemini-dropdown-item.active .check-icon {
+    opacity: 1;
   }
 
   .hint {
@@ -739,6 +911,39 @@
   </defs>
 </svg>
 
+<nav class="gemini-top-nav">
+  <div class="gemini-nav-inner">
+    <div class="gemini-brand-group">
+      <svg class="triangle-badge-icon" viewBox="0 0 24 24"><polygon points="12,3 22,21 2,21" fill="url(#neonGrad)"/></svg>
+      <span class="gemini-brand-name">RAHBAR</span>
+    </div>
+    
+    <!-- Gemini-Style Model Switcher Pill Dropdown -->
+    <div class="gemini-model-selector" id="model-selector-wrap">
+      <button type="button" class="gemini-model-pill" id="model-trigger" aria-haspopup="true" aria-expanded="false" title="Switch AI model">
+        <span class="model-pill-name" id="selected-model-name">Groq Cloud</span>
+        <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+      </button>
+      <div class="gemini-dropdown" id="model-dropdown" role="menu">
+        <button type="button" class="gemini-dropdown-item active" data-provider="hosted" id="opt-groq" role="menuitem">
+          <div class="item-text">
+            <span class="item-title">Groq Cloud</span>
+            <span class="item-desc">gpt-oss-120b · Cloud LPU (~1.5s)</span>
+          </div>
+          <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </button>
+        <button type="button" class="gemini-dropdown-item" data-provider="ollama" id="opt-ollama" role="menuitem">
+          <div class="item-text">
+            <span class="item-title">Local Ollama</span>
+            <span class="item-desc">llama3.2:3b · Offline local (~30s)</span>
+          </div>
+          <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
 <main>
   <header>
     <div class="brand-badge">
@@ -760,7 +965,7 @@
 </main>
 
 <button id="scroll-bottom-btn" type="button" aria-label="Scroll to bottom" class="scroll-bottom-btn" title="Scroll to bottom">
-  <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
 </button>
 
 <form id="ask">
@@ -902,6 +1107,50 @@ let isGenerating = false;
 let currentAbortController = null;
 const scrollBottomBtn = document.getElementById("scroll-bottom-btn");
 
+let selectedProvider = "hosted";
+const modelSelectorWrap = document.getElementById("model-selector-wrap");
+const modelTrigger = document.getElementById("model-trigger");
+const selectedModelName = document.getElementById("selected-model-name");
+const optGroq = document.getElementById("opt-groq");
+const optOllama = document.getElementById("opt-ollama");
+
+function toggleModelMenu() {
+  if (isGenerating) return;
+  const isOpen = modelSelectorWrap.classList.toggle("open");
+  modelTrigger.setAttribute("aria-expanded", String(isOpen));
+}
+
+function selectProvider(provider) {
+  if (isGenerating) return;
+  selectedProvider = provider;
+  if (provider === "hosted") {
+    selectedModelName.textContent = "Groq Cloud";
+    optGroq.classList.add("active");
+    optOllama.classList.remove("active");
+  } else {
+    selectedModelName.textContent = "Local Ollama";
+    optOllama.classList.add("active");
+    optGroq.classList.remove("active");
+  }
+  modelSelectorWrap.classList.remove("open");
+  modelTrigger.setAttribute("aria-expanded", "false");
+}
+
+modelTrigger.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleModelMenu();
+});
+
+optGroq.addEventListener("click", () => selectProvider("hosted"));
+optOllama.addEventListener("click", () => selectProvider("ollama"));
+
+document.addEventListener("click", (e) => {
+  if (modelSelectorWrap && !modelSelectorWrap.contains(e.target)) {
+    modelSelectorWrap.classList.remove("open");
+    modelTrigger.setAttribute("aria-expanded", "false");
+  }
+});
+
 function updateSendState() {
   if (isGenerating) {
     // In generating mode, the send button is the active STOP button
@@ -922,6 +1171,13 @@ function abortGeneration() {
 function setGenerating(generating) {
   isGenerating = generating;
   input.disabled = generating;
+  if (modelTrigger) {
+    modelTrigger.disabled = generating;
+    if (generating) {
+      modelSelectorWrap.classList.remove("open");
+      modelTrigger.setAttribute("aria-expanded", "false");
+    }
+  }
   if (generating) {
     input.placeholder = "Generating response… please wait…";
     send.classList.add("stop-mode");
@@ -1020,7 +1276,7 @@ async function ask(question) {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, provider: selectedProvider }),
       signal: currentAbortController.signal,
     });
     let body = null;

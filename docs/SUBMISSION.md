@@ -16,28 +16,33 @@ This document consolidates all submission deliverables, verification links, and 
   - Abdullah (`i243164@isb.nu.edu.pk` / GitHub: [`abdullah-netiz`](https://github.com/abdullah-netiz))
 
 ### Item 2: CI / CD Workflow Execution Verification
+- **GitHub Actions CD Workflow (Production Deployment on `main`)**:
+  - **Successful CD Run**: [Run #43014595115](https://github.com/abdullah-netiz/rahbar/actions/runs/43014595115) (100% Green on `main`)
+  - **Jobs Passed**:
+    1. `test`: Pytest test suite across API and indexer (22s).
+    2. `build-push`: Multi-architecture Docker images built and pushed to Docker Hub with commit SHA tags (1m 33s).
+    3. `deploy`: Ephemeral Kind cluster initialization, manifest rollout, indexer Job completion, and Ingress smoke test (6m 13s).
 - **GitHub Actions CI Workflow**: [`.github/workflows/ci.yml`](file:///c:/SE/Semester%205/SCD/A2/rahbar/.github/workflows/ci.yml)
-  - **Passing CI Run ID**: [`42475406819`](https://github.com/abdullah-netiz/rahbar/actions/runs/42475406819) (100% Green on `dev` across all 6 jobs)
-  - **PR Verification Run**: [`42476622665`](https://github.com/abdullah-netiz/rahbar/actions/runs/42476622665) (100% Green on PR #1)
+  - **Passing CI Run ID**: [`43014523418`](https://github.com/abdullah-netiz/rahbar/actions/runs/43014523418) (100% Green on PR #4 across all 6 jobs)
   - **Pipeline Jobs**:
     1. `lint`: Ruff formatting/linting and Mypy static typing passed.
     2. `test`: Pytest with $\ge 60\%$ coverage on `app` package using offline stub providers.
-    3. `manifests`: Strict Kubeconform validation against Kubernetes v1.30.0 schemas.
-    4. `build`: Multi-container Docker Buildx execution for `api`, `indexer`, and `ui`.
-    5. `scan`: Trivy vulnerability filesystem scanner (0 HIGH/CRITICAL unpatched vulnerabilities).
-    6. `e2e-eval`: Ephemeral Kind cluster initialization, manifest rollout, indexer Job execution, and golden set eval regression gate.
-- **GitHub Actions CD Workflow**: [`.github/workflows/cd.yml`](file:///c:/SE/Semester%205/SCD/A2/rahbar/.github/workflows/cd.yml)
-  - Automatically executes on push (or merge) to `main`.
-  - Step dependency graph: `test` $\rightarrow$ `build-push` (needs: `test`) $\rightarrow$ `deploy` (needs: `build-push`).
-  - Strict commit SHA container image tagging.
-  - Ephemeral Kind deployment verification with `kubectl rollout status` and automated Ingress `/healthz` smoke test.
+    3. `manifests`: Strict Kubeconform validation against Kubernetes schemas.
+    4. `build`: Docker Buildx execution for `api`, `indexer`, and `ui`.
+    5. `scan`: Trivy vulnerability filesystem scanner (0 HIGH/CRITICAL findings).
+    6. `e2e-eval`: Kind cluster rollout, indexer Job execution, and golden set eval regression gate.
 
 ### Item 3: Docker Hub Container Images (Tagged by SHA)
-- **Registry**: Docker Hub
-- **Images Published**:
-  - `abdullahnetiz/rahbar-api:<commit-sha>`
-  - `abdullahnetiz/rahbar-indexer:<commit-sha>`
-  - `abdullahnetiz/rahbar-ui:<commit-sha>`
+- **Registry**: Docker Hub ([https://hub.docker.com/u/abdullahnetiz](https://hub.docker.com/u/abdullahnetiz))
+- **Production Commit SHA**: `d8508d93c448bbdb9783f08d37fc1d723708304a` (Short: `d8508d9`)
+- **Images Published with Commit SHA Tags**:
+  - `abdullahnetiz/rahbar-api:d8508d93c448bbdb9783f08d37fc1d723708304a`
+  - `abdullahnetiz/rahbar-indexer:d8508d93c448bbdb9783f08d37fc1d723708304a`
+  - `abdullahnetiz/rahbar-ui:d8508d93c448bbdb9783f08d37fc1d723708304a`
+- **Docker Hub Tag Repositories**:
+  - [https://hub.docker.com/r/abdullahnetiz/rahbar-api/tags](https://hub.docker.com/r/abdullahnetiz/rahbar-api/tags)
+  - [https://hub.docker.com/r/abdullahnetiz/rahbar-indexer/tags](https://hub.docker.com/r/abdullahnetiz/rahbar-indexer/tags)
+  - [https://hub.docker.com/r/abdullahnetiz/rahbar-ui/tags](https://hub.docker.com/r/abdullahnetiz/rahbar-ui/tags)
 - **Deployment Invariant**: All production deployments are referenced strictly by unique git commit SHA (`${{ github.sha }}`), never floating `:latest` tags.
 
 ### Item 4: Evaluation Benchmark Artifacts

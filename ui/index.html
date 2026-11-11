@@ -642,7 +642,7 @@
   /* Floating Scroll-to-Bottom Arrow Button */
   .scroll-bottom-btn {
     position: fixed;
-    bottom: 136px;
+    bottom: 172px;
     left: 50%;
     transform: translateX(-50%) translateY(14px);
     width: 42px;
@@ -687,6 +687,87 @@
   .scroll-bottom-btn:hover svg {
     fill: #00ff87;
     transform: translateY(2px);
+  }
+
+  /* Model Selector Control */
+  .model-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .model-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 13px;
+    border-radius: 20px;
+    background: rgba(22, 27, 34, 0.75);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    user-select: none;
+  }
+
+  .model-btn:hover:not(:disabled) {
+    border-color: rgba(96, 239, 255, 0.4);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .model-btn.active#btn-groq {
+    background: rgba(96, 239, 255, 0.12);
+    border-color: rgba(96, 239, 255, 0.6);
+    color: #60efff;
+    box-shadow: 0 0 14px rgba(96, 239, 255, 0.25);
+  }
+
+  .model-btn.active#btn-ollama {
+    background: rgba(0, 255, 135, 0.12);
+    border-color: rgba(0, 255, 135, 0.6);
+    color: #00ff87;
+    box-shadow: 0 0 14px rgba(0, 255, 135, 0.25);
+  }
+
+  .model-btn .model-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #475569;
+    transition: all 0.2s ease;
+  }
+
+  .model-btn.active#btn-groq .model-dot {
+    background: #60efff;
+    box-shadow: 0 0 8px #60efff;
+  }
+
+  .model-btn.active#btn-ollama .model-dot {
+    background: #00ff87;
+    box-shadow: 0 0 8px #00ff87;
+  }
+
+  .model-btn .model-badge {
+    font-size: 10px;
+    opacity: 0.8;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    letter-spacing: 0.02em;
+  }
+
+  .model-btn:disabled,
+  .model-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
   }
 
   .hint {
@@ -765,6 +846,18 @@
 
 <form id="ask">
   <div class="bar-container">
+    <div class="model-selector" id="model-selector" role="radiogroup" aria-label="Select AI Model">
+      <button type="button" class="model-btn active" data-provider="hosted" id="btn-groq" aria-checked="true" role="radio" title="Groq Cloud LPU (Ultra-fast ~1.5s)">
+        <span class="model-dot"></span>
+        <span class="model-name">Groq Cloud</span>
+        <span class="model-badge">gpt-oss-120b · ~1.5s</span>
+      </button>
+      <button type="button" class="model-btn" data-provider="ollama" id="btn-ollama" aria-checked="false" role="radio" title="Local Ollama (Offline ~30s)">
+        <span class="model-dot"></span>
+        <span class="model-name">Local Ollama</span>
+        <span class="model-badge">llama3.2:3b · local</span>
+      </button>
+    </div>
     <div class="bar">
       <textarea id="question" aria-label="Your question" placeholder="Ask about academic rules, fees, grading, attendance..." maxlength="500" required rows="1"></textarea>
       <button id="send" type="submit" aria-label="Send question" disabled>
@@ -902,6 +995,29 @@ let isGenerating = false;
 let currentAbortController = null;
 const scrollBottomBtn = document.getElementById("scroll-bottom-btn");
 
+let selectedProvider = "hosted";
+const btnGroq = document.getElementById("btn-groq");
+const btnOllama = document.getElementById("btn-ollama");
+
+function selectProvider(provider) {
+  if (isGenerating) return;
+  selectedProvider = provider;
+  if (provider === "hosted") {
+    btnGroq.classList.add("active");
+    btnGroq.setAttribute("aria-checked", "true");
+    btnOllama.classList.remove("active");
+    btnOllama.setAttribute("aria-checked", "false");
+  } else {
+    btnOllama.classList.add("active");
+    btnOllama.setAttribute("aria-checked", "true");
+    btnGroq.classList.remove("active");
+    btnGroq.setAttribute("aria-checked", "false");
+  }
+}
+
+btnGroq.addEventListener("click", () => selectProvider("hosted"));
+btnOllama.addEventListener("click", () => selectProvider("ollama"));
+
 function updateSendState() {
   if (isGenerating) {
     // In generating mode, the send button is the active STOP button
@@ -937,6 +1053,11 @@ function setGenerating(generating) {
   }
   document.querySelectorAll(".quick-chip").forEach((btn) => {
     btn.disabled = generating;
+  });
+  document.querySelectorAll(".model-btn").forEach((btn) => {
+    btn.disabled = generating;
+    if (generating) btn.classList.add("disabled");
+    else btn.classList.remove("disabled");
   });
   updateSendState();
 }
@@ -1020,7 +1141,7 @@ async function ask(question) {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, provider: selectedProvider }),
       signal: currentAbortController.signal,
     });
     let body = null;

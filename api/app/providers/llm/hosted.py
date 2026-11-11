@@ -22,7 +22,10 @@ log = logging.getLogger("rahbar.llm.hosted")
 
 
 class HostedProvider:
-    name = "hosted"
+    @property
+    def name(self) -> str:
+        model = self.settings.llm_model
+        return f"Groq ({model})" if "groq" in self.settings.hosted_base_url.lower() else f"hosted ({model})"
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings  # hosted_base_url, llm_model, llm_api_key, temperature, llm_timeout

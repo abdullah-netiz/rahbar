@@ -9,12 +9,33 @@ import httpx
 from .config import IndexerSettings
 
 
+import re
+
+
 def _deterministic_fallback_embed(text: str, dim: int = 768) -> list[float]:
     """Generates a normalized deterministic vector for offline testing when Ollama is unavailable."""
-    h = hashlib.sha256(text.encode("utf-8")).digest()
-    vals = [float((h[i % len(h)] ^ (i & 0xFF)) - 128) / 128.0 for i in range(dim)]
-    norm = math.sqrt(sum(v * v for v in vals)) or 1.0
-    return [v / norm for v in vals]
+    stopwords = {"what", "is", "the", "for", "to", "a", "an", "of", "in", "and", "or", "does", "do", "how", "student", "are", "on", "at", "by", "from", "be"}
+    words = [w for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in stopwords]
+    if not words:
+        return [1.0 / math.sqrt(dim)] * dim
+    vec = [0.0] * dim
+    for w in words:
+        h = int(hashlib.sha256(w.encode()).hexdigest(), 16)
+        idx = h % dim
+        sign = 1.0 if ((h >> 16) & 1) else -1.0
+        vec[idx] += 1.0 * sign
+        for i in range(3):
+            sub_idx = (h + (i + 1) * 97) % dim
+            vec[sub_idx] += 0.5 * sign
+    for i in range(len(words) - 1):
+        bg = f"{words[i]}_{words[i+1]}"
+        h = int(hashlib.sha256(bg.encode()).hexdigest(), 16)
+        idx = h % dim
+        sign = 1.0 if ((h >> 16) & 1) else -1.0
+        vec[idx] += 2.0 * sign
+
+    norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+    return [v / norm for v in vec]
 
 
 def embed(texts: list[str], settings: IndexerSettings) -> list[list[float]]:

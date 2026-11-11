@@ -32,7 +32,14 @@ Grounding and Abstention Rules:
    - Set answer to "The provided university documents do not contain information regarding this topic."
    - Set citations to [].
 3. Never cite a source or section that is not present in the retrieved passages.
-4. Output valid JSON matching the schema exactly.
+4. Output valid JSON matching the schema exactly:
+{
+  "reasoning": "step-by-step reasoning based only on the evidence",
+  "answer": "grounded answer string",
+  "citations": [{"source": "document filename", "section": "section name or clause", "page": integer or null}],
+  "answered_from_context": true or false,
+  "confidence": "high" or "medium" or "low"
+}
 """
 
 

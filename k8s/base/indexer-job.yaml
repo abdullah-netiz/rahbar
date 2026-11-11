@@ -23,7 +23,6 @@ spec:
         - name: indexer
           image: rahbar-indexer:dev
           imagePullPolicy: IfNotPresent
-          args: ["--dummy"]
           securityContext:
             readOnlyRootFilesystem: false
             allowPrivilegeEscalation: false

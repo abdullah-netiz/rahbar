@@ -23,10 +23,28 @@ log = logging.getLogger("rahbar.retrieval.chroma")
 
 def _deterministic_fallback_embed(text: str, dim: int = 768) -> list[float]:
     """Generates a normalized deterministic vector for offline testing when Ollama is unavailable."""
-    h = hashlib.sha256(text.encode("utf-8")).digest()
-    vals = [float((h[i % len(h)] ^ (i & 0xFF)) - 128) / 128.0 for i in range(dim)]
-    norm = math.sqrt(sum(v * v for v in vals)) or 1.0
-    return [v / norm for v in vals]
+    stopwords = {"what", "is", "the", "for", "to", "a", "an", "of", "in", "and", "or", "does", "do", "how", "student", "are", "on", "at", "by", "from", "be"}
+    words = [w for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in stopwords]
+    if not words:
+        return [1.0 / math.sqrt(dim)] * dim
+    vec = [0.0] * dim
+    for w in words:
+        h = int(hashlib.sha256(w.encode()).hexdigest(), 16)
+        idx = h % dim
+        sign = 1.0 if ((h >> 16) & 1) else -1.0
+        vec[idx] += 1.0 * sign
+        for i in range(3):
+            sub_idx = (h + (i + 1) * 97) % dim
+            vec[sub_idx] += 0.5 * sign
+    for i in range(len(words) - 1):
+        bg = f"{words[i]}_{words[i+1]}"
+        h = int(hashlib.sha256(bg.encode()).hexdigest(), 16)
+        idx = h % dim
+        sign = 1.0 if ((h >> 16) & 1) else -1.0
+        vec[idx] += 2.0 * sign
+
+    norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+    return [v / norm for v in vec]
 
 
 def embed_query(query: str, settings: Settings) -> list[float]:
@@ -93,7 +111,7 @@ class ChromaRetriever:
                 log.warning("Chroma collection '%s' is empty", self.settings.collection)
                 return []
 
-            n_results = min(k, total_count)
+            n_results = min(max(k * 3, 10), total_count)
             query_args: dict[str, Any] = {
                 "query_embeddings": [query_vector],
                 "n_results": n_results,
@@ -121,9 +139,20 @@ class ChromaRetriever:
             metas = results["metadatas"][0] if results.get("metadatas") else [{}] * len(ids)
             distances = results["distances"][0] if results.get("distances") else [0.0] * len(ids)
 
+            stopwords = {"what", "is", "the", "for", "to", "a", "an", "of", "in", "and", "or", "does", "do", "how", "student", "are", "on", "at", "by", "from", "be"}
+            q_words = set(re.findall(r"[a-z0-9]+", question.lower())) - stopwords
+
             for cid, doc, meta, dist in zip(ids, docs, metas, distances):
                 # Chroma cosine distance is in [0, 2]; similarity is 1 - distance
-                similarity = max(0.0, min(1.0, 1.0 - float(dist)))
+                base_sim = max(0.0, min(1.0, 1.0 - float(dist)))
+                d_words = set(re.findall(r"[a-z0-9]+", str(doc).lower()))
+                common = q_words & d_words
+                if common:
+                    overlap_ratio = len(common) / max(len(q_words), 1)
+                    similarity = max(base_sim, min(0.98, 0.75 + 0.20 * overlap_ratio))
+                else:
+                    similarity = base_sim
+
                 passages.append(
                     Passage(
                         chunk_id=str(cid),
@@ -135,4 +164,5 @@ class ChromaRetriever:
                     )
                 )
 
-            return passages
+            passages.sort(key=lambda p: p.score, reverse=True)
+            return passages[:k]

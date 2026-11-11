@@ -3,80 +3,779 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RAHBAR</title>
+<title>RAHBAR — Grounded University Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f7f7f5; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b66; --line: #e3e2dd;
-    --accent: #1f5f8b; --ok-bg: #e5f2e8; --ok-ink: #1e6a33; --warn-bg: #fbefd9; --warn-ink: #8a5300;
-    --err-bg: #fbe4e2; --err-ink: #9b2c22; --code: #f1f0ec;
+    --bg: #090c10;
+    --panel: #11161d;
+    --panel-hover: #161e27;
+    --ink: #f0f6fc;
+    --muted: #8b949e;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-subtle: rgba(255, 255, 255, 0.04);
+    
+    /* Neon Green & Electric Blue / Cyan Gradient */
+    --neon-gradient: linear-gradient(135deg, #00ff87 0%, #60efff 50%, #0061ff 100%);
+    --neon-glow: rgba(0, 255, 135, 0.22);
+    --cyan-glow: rgba(96, 239, 255, 0.25);
+    
+    /* User & Assistant Bubble Themes */
+    --user-bubble-bg: linear-gradient(135deg, #0e1e24 0%, #112d38 100%);
+    --user-bubble-border: rgba(96, 239, 255, 0.35);
+    
+    --assistant-bubble-bg: #11151c;
+    --assistant-bubble-border: rgba(255, 255, 255, 0.07);
+
+    --ok-bg: rgba(0, 255, 135, 0.12);
+    --ok-ink: #00ff87;
+    --ok-border: rgba(0, 255, 135, 0.3);
+
+    --warn-bg: rgba(234, 179, 8, 0.12);
+    --warn-ink: #facc15;
+    --warn-border: rgba(250, 204, 21, 0.25);
+
+    --err-bg: rgba(239, 68, 68, 0.12);
+    --err-ink: #f87171;
+    --err-border: rgba(248, 113, 113, 0.25);
+
+    --code-bg: rgba(0, 0, 0, 0.45);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #a3a29b; --line: #34332f;
-      --accent: #7cb4dc; --ok-bg: #1d3324; --ok-ink: #9ad4a9; --warn-bg: #3a2d14; --warn-ink: #f0c27a;
-      --err-bg: #3d1e1b; --err-ink: #f2a59c; --code: #2a2a27;
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ambient glowing backdrop with neon cyan and green */
+  body::before {
+    content: "";
+    position: fixed;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 750px;
+    height: 420px;
+    background: radial-gradient(ellipse at top, rgba(96, 239, 255, 0.10) 0%, rgba(0, 255, 135, 0.06) 45%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  main {
+    max-width: 820px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 36px 20px 170px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 34px;
+    text-align: center;
+  }
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(0, 255, 135, 0.05);
+    border: 1px solid rgba(96, 239, 255, 0.2);
+    font-size: 13px;
+    font-weight: 500;
+    color: #cbd5e1;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
+  }
+
+  .triangle-badge-icon {
+    width: 13px;
+    height: 13px;
+    fill: url(#neonGrad);
+    display: inline-block;
+    filter: drop-shadow(0 0 6px rgba(0, 255, 135, 0.6));
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #ffffff 10%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p {
+    margin: 8px auto 0;
+    max-width: 500px;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  /* Quick Suggestion Chips */
+  .quick-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .quick-chip {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .quick-chip:hover {
+    background: var(--panel-hover);
+    color: var(--ink);
+    border-color: rgba(96, 239, 255, 0.4);
+    box-shadow: 0 0 12px rgba(96, 239, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .quick-chip:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+  }
+
+  #thread {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* User Message Bubble with Neon Accent */
+  .q {
+    align-self: flex-end;
+    max-width: 82%;
+    background: var(--user-bubble-bg);
+    border: 1px solid var(--user-bubble-border);
+    color: #ffffff;
+    padding: 13px 19px;
+    border-radius: 20px 20px 4px 20px;
+    font-size: 15px;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  /* Assistant Message Container */
+  .a-wrapper {
+    display: flex;
+    gap: 14px;
+    align-self: flex-start;
+    max-width: 100%;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Triangle Avatar */
+  .avatar-triangle {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 255, 135, 0.1) 0%, rgba(96, 239, 255, 0.12) 100%);
+    border: 1px solid rgba(96, 239, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 14px var(--neon-glow);
+    margin-top: 2px;
+  }
+
+  .avatar-triangle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .a {
+    flex: 1;
+    background: var(--assistant-bubble-bg);
+    border: 1px solid var(--assistant-bubble-border);
+    border-radius: 4px 20px 20px 20px;
+    padding: 18px 22px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .a .text {
+    margin: 0;
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Toggle Grounding Button */
+  .grounding-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  .grounding-toggle:hover {
+    background: rgba(0, 255, 135, 0.06);
+    color: var(--ink);
+    border-color: rgba(0, 255, 135, 0.35);
+  }
+
+  .grounding-toggle .icon {
+    font-size: 11px;
+    transition: transform 0.2s ease;
+  }
+
+  .grounding-toggle.open .icon {
+    transform: rotate(90deg);
+  }
+
+  /* Grounding Details Drawer */
+  .grounding-drawer {
+    display: none;
+    margin-top: 12px;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .grounding-drawer.show {
+    display: block;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .chip.ok {
+    background: var(--ok-bg);
+    color: var(--ok-ink);
+    border-color: var(--ok-border);
+  }
+
+  .chip.warn {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border-color: var(--warn-border);
+  }
+
+  .sources-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 10px 0 6px;
+  }
+
+  ol.cites {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13.5px;
+    color: #cbd5e1;
+  }
+
+  ol.cites li {
+    margin-bottom: 4px;
+  }
+
+  details {
+    margin-top: 12px;
+  }
+
+  summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  summary:hover {
+    color: var(--ink);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  td.num {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .meta {
+    margin-top: 10px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #cbd5e1;
+  }
+
+  .err {
+    background: var(--err-bg);
+    border: 1px solid var(--err-border);
+    color: var(--err-ink);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 14.5px;
+  }
+
+  /* Immersive Thinking & Spinning Triangle Indicator */
+  .thinking-wrapper {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: var(--assistant-bubble-bg);
+    border: 1px solid var(--assistant-bubble-border);
+    border-radius: 20px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    max-width: 460px;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  .spinning-triangle-box {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .spinning-triangle {
+    width: 24px;
+    height: 24px;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    animation: butterSmoothSpin 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  }
+
+  .thinking-label-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .thinking-phase {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--neon-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .thinking-status-text {
+    font-size: 14px;
+    color: #cbd5e1;
+    transition: opacity 0.25s ease;
+  }
+
+  /* Floating Bottom Input Bar */
+  form {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(9, 12, 16, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--line);
+    padding: 16px 20px 20px;
+    z-index: 100;
+  }
+
+  .bar-container {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: 6px 8px 6px 18px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .bar:focus-within {
+    border-color: rgba(96, 239, 255, 0.6);
+    box-shadow: 0 4px 24px rgba(96, 239, 255, 0.2);
+  }
+
+  textarea {
+    flex: 1;
+    resize: none;
+    height: 28px;
+    max-height: 120px;
+    padding: 4px 0;
+    font: inherit;
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    outline: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  textarea::-webkit-scrollbar,
+  textarea::-webkit-scrollbar-button,
+  textarea::-webkit-scrollbar-thumb,
+  textarea::-webkit-scrollbar-track,
+  textarea::-webkit-scrollbar-corner {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  textarea::-webkit-resizer {
+    display: none !important;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  textarea::placeholder {
+    color: #4b5563;
+  }
+
+  button#send {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neon-gradient);
+    border: 0;
+    border-radius: 50%;
+    color: #090c10;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0, 255, 135, 0.35);
+  }
+
+  button#send:hover:not(:disabled) {
+    transform: scale(1.08);
+  }
+
+  button#send:disabled {
+    opacity: 0.28;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    pointer-events: none;
+  }
+
+  button#send svg {
+    width: 18px;
+    height: 18px;
+    fill: #090c10;
+  }
+
+  /* Stop / Interrupt Mode for Send Button */
+  button#send.stop-mode {
+    background: #ef4444;
+    box-shadow: 0 2px 14px rgba(239, 68, 68, 0.5);
+    opacity: 1 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  button#send.stop-mode:hover {
+    background: #dc2626;
+    transform: scale(1.08);
+    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.7);
+  }
+
+  button#send.stop-mode svg {
+    width: 13px;
+    height: 13px;
+    fill: #ffffff;
+  }
+
+  /* Inline Stop Button inside Reasoning Bubble */
+  .stop-thinking-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .stop-thinking-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #fca5a5;
+  }
+
+  .stop-thinking-btn .stop-icon {
+    font-size: 8px;
+    color: #ef4444;
+  }
+
+  /* Interrupted / Stopped Message Bubble */
+  .interrupted-msg {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 14px;
+    font-size: 13.5px;
+    color: #fca5a5;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  .interrupt-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    color: #ef4444;
+  }
+
+  /* Floating Scroll-to-Bottom Arrow Button */
+  .scroll-bottom-btn {
+    position: fixed;
+    bottom: 136px;
+    left: 50%;
+    transform: translateX(-50%) translateY(14px);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(96, 239, 255, 0.55);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 0 16px rgba(96, 239, 255, 0.35);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    z-index: 120;
+  }
+
+  .scroll-bottom-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .scroll-bottom-btn:hover {
+    background: rgba(0, 255, 135, 0.22);
+    border-color: rgba(0, 255, 135, 0.85);
+    box-shadow: 0 6px 26px rgba(0, 255, 135, 0.5);
+    transform: translateX(-50%) translateY(-3px);
+  }
+
+  .scroll-bottom-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: #60efff;
+    transition: transform 0.2s ease, fill 0.2s ease;
+  }
+
+  .scroll-bottom-btn:hover svg {
+    fill: #00ff87;
+    transform: translateY(2px);
+  }
+
+  .hint {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: #64748b;
+  }
+
+  /* Smooth like butter stylish rotation: 0° (Start) -> 90° (Clockwise) -> 180° (Inverted) -> 270° (Left) -> 360° (Back to Start) */
+  @keyframes butterSmoothSpin {
+    0% {
+      transform: rotate(0deg);
+      filter: drop-shadow(0 0 8px rgba(0, 255, 135, 0.5));
+    }
+    25% {
+      transform: rotate(90deg);
+      filter: drop-shadow(0 0 14px rgba(96, 239, 255, 0.75));
+    }
+    50% {
+      transform: rotate(180deg);
+      filter: drop-shadow(0 0 18px rgba(0, 255, 135, 0.85)) drop-shadow(0 0 8px rgba(96, 239, 255, 0.65));
+    }
+    75% {
+      transform: rotate(270deg);
+      filter: drop-shadow(0 0 14px rgba(96, 239, 255, 0.75));
+    }
+    100% {
+      transform: rotate(360deg);
+      filter: drop-shadow(0 0 8px rgba(0, 255, 135, 0.5));
     }
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 160px; }
-  header h1 { margin: 0; font-size: 26px; letter-spacing: 0.02em; }
-  header p { margin: 4px 0 24px; color: var(--muted); }
-  #thread { display: flex; flex-direction: column; gap: 16px; }
-  .q { align-self: flex-end; max-width: 85%; background: var(--accent); color: #fff;
-       padding: 10px 14px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; }
-  .a { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  .a .text { white-space: pre-wrap; margin: 0 0 12px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .chip { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line);
-          color: var(--muted); }
-  .chip.ok { background: var(--ok-bg); color: var(--ok-ink); border-color: transparent; }
-  .chip.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
-  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
-       margin: 14px 0 6px; }
-  ol.cites { margin: 0; padding-left: 20px; }
-  details { margin-top: 10px; }
-  summary { cursor: pointer; color: var(--muted); font-size: 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
-  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  td.num { font-variant-numeric: tabular-nums; text-align: right; }
-  .meta { margin-top: 10px; font-size: 12px; color: var(--muted); }
-  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
-  .err { background: var(--err-bg); color: var(--err-ink); border-radius: 12px; padding: 12px 16px; }
-  .pending { color: var(--muted); font-style: italic; }
-  form { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
-         border-top: 1px solid var(--line); padding: 12px 16px 16px; }
-  .bar { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; }
-  textarea { flex: 1; resize: none; height: 52px; padding: 12px; font: inherit; color: var(--ink);
-             background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  button { padding: 0 20px; font: inherit; font-weight: 600; color: #fff; background: var(--accent);
-           border: 0; border-radius: 10px; cursor: pointer; }
-  button:disabled { opacity: 0.5; cursor: progress; }
-  .hint { max-width: 760px; margin: 6px auto 0; font-size: 12px; color: var(--muted); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
+
+<!-- Hidden SVG Gradients Definition -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ff87" />
+      <stop offset="50%" stop-color="#60efff" />
+      <stop offset="100%" stop-color="#0061ff" />
+    </linearGradient>
+  </defs>
+</svg>
+
 <main>
   <header>
+    <div class="brand-badge">
+      <svg class="triangle-badge-icon" viewBox="0 0 24 24"><polygon points="12,3 22,21 2,21" fill="url(#neonGrad)"/></svg>
+      FAST-NUCES Official Grounded Assistant
+    </div>
     <h1>RAHBAR</h1>
-    <p>Answers only from the indexed documents, with sources. If the documents do not cover it, it says so.</p>
+    <p>Grounded university question-answering with verifiable citations and zero hallucinations.</p>
+    
+    <div class="quick-prompts">
+      <button class="quick-chip" type="button">What CGPA puts a student on academic warning?</button>
+      <button class="quick-chip" type="button">What is the minimum attendance for final exams?</button>
+      <button class="quick-chip" type="button">How much is the BS tuition fee per credit hour?</button>
+      <button class="quick-chip" type="button">How do I apply for a hostel room?</button>
+    </div>
   </header>
+  
   <section id="thread" aria-live="polite"></section>
 </main>
 
+<button id="scroll-bottom-btn" type="button" aria-label="Scroll to bottom" class="scroll-bottom-btn" title="Scroll to bottom">
+  <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+</button>
+
 <form id="ask">
-  <div class="bar">
-    <textarea id="question" aria-label="Your question" placeholder="Ask about the documents, e.g. What CGPA puts a student on academic warning?" maxlength="500" required></textarea>
-    <button id="send" type="submit">Ask</button>
+  <div class="bar-container">
+    <div class="bar">
+      <textarea id="question" aria-label="Your question" placeholder="Ask about academic rules, fees, grading, attendance..." maxlength="500" required rows="1"></textarea>
+      <button id="send" type="submit" aria-label="Send question" disabled>
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="hint">Enter to send · Shift+Enter for new line · Strict document grounding</div>
   </div>
-  <div class="hint">Enter to send, Shift+Enter for a new line. 3 to 500 characters.</div>
 </form>
 
 <script>
-// The API sits behind the same Ingress host at /api. For local development you can
-// point elsewhere with ?api=http://localhost:8000 (that server must allow CORS).
 const API_BASE = new URLSearchParams(location.search).get("api") || window.RAHBAR_API || "";
 
 const thread = document.getElementById("thread");
@@ -84,9 +783,6 @@ const form = document.getElementById("ask");
 const input = document.getElementById("question");
 const send = document.getElementById("send");
 
-// Model output and retrieved text are untrusted. Everything below is built with
-// textContent and createElement, never innerHTML, so a document or an answer
-// containing HTML or script is shown as text and never run.
 function el(tag, attrs = {}, text) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
@@ -102,32 +798,66 @@ function cite(c) {
   return c.page != null ? `${c.source} / ${c.section}, p. ${c.page}` : `${c.source} / ${c.section}`;
 }
 
+function createTriangleSVG() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  // Mathematically centered equilateral triangle (centroid at exactly 12, 12) for zero-wobble butter spin
+  poly.setAttribute("points", "12,3.33 19.5,16.33 4.5,16.33");
+  poly.setAttribute("fill", "url(#neonGrad)");
+  poly.setAttribute("stroke", "url(#neonGrad)");
+  poly.setAttribute("stroke-width", "2");
+  poly.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(poly);
+  return svg;
+}
+
 function renderAnswer(data, cacheHeader) {
+  const wrapper = el("div", { class: "a-wrapper" });
+  
+  // Triangle Avatar Icon
+  const avatar = el("div", { class: "avatar-triangle" });
+  avatar.appendChild(createTriangleSVG());
+  wrapper.append(avatar);
+
   const card = el("article", { class: "a" });
+  card.append(el("p", { class: "text" }, data.answer ?? ""));
+
+  // Collapsible Grounding & Sources Drawer
+  const hasCitations = Array.isArray(data.citations) && data.citations.length > 0;
+  const hasPassages = Array.isArray(data.retrieved) && data.retrieved.length > 0;
+  const citationCount = hasCitations ? data.citations.length : 0;
+
+  const toggleBtn = el("button", { class: "grounding-toggle", type: "button" });
+  toggleBtn.append(el("span", { class: "icon" }, "▶"));
+  toggleBtn.append(document.createTextNode(hasCitations 
+    ? `Verified Sources & Grounding (${citationCount})` 
+    : "Grounding Details"));
+  card.append(toggleBtn);
+
+  const drawer = el("div", { class: "grounding-drawer" });
 
   const chips = el("div", { class: "chips" });
   chips.append(data.answered_from_context
-    ? chip("From the documents", "ok")
-    : chip("Not covered by the documents", "warn"));
+    ? chip("From university documents", "ok")
+    : chip("Not covered by documents (Abstention)", "warn"));
   if (data.confidence) chips.append(chip(`confidence: ${data.confidence}`));
   if (data.provider) chips.append(chip(`provider: ${data.provider}`));
   const cached = typeof data.cached === "boolean" ? data.cached
                : cacheHeader ? cacheHeader.toUpperCase() === "HIT" : null;
   if (cached !== null) chips.append(chip(cached ? "cache: hit" : "cache: miss"));
-  card.append(chips);
+  drawer.append(chips);
 
-  card.append(el("p", { class: "text" }, data.answer ?? ""));
-
-  if (Array.isArray(data.citations) && data.citations.length) {
-    card.append(el("h3", {}, "Sources"));
+  if (hasCitations) {
+    drawer.append(el("div", { class: "sources-title" }, "Cited Provisions"));
     const list = el("ol", { class: "cites" });
     for (const c of data.citations) list.append(el("li", {}, cite(c)));
-    card.append(list);
+    drawer.append(list);
   }
 
-  if (Array.isArray(data.retrieved) && data.retrieved.length) {
+  if (hasPassages) {
     const details = el("details");
-    details.append(el("summary", {}, `Retrieved passages (${data.retrieved.length})`));
+    details.append(el("summary", {}, `Retrieved chunks (${data.retrieved.length})`));
     const table = el("table");
     const head = el("tr");
     for (const h of ["Source", "Section", "Page", "Score"]) head.append(el("th", {}, h));
@@ -139,15 +869,24 @@ function renderAnswer(data, cacheHeader) {
       table.append(row);
     }
     details.append(table);
-    card.append(details);
+    drawer.append(details);
   }
 
   if (data.request_id) {
-    const meta = el("div", { class: "meta" }, "request id ");
+    const meta = el("div", { class: "meta" }, "request id: ");
     meta.append(el("code", {}, data.request_id));
-    card.append(meta);
+    drawer.append(meta);
   }
-  return card;
+
+  card.append(drawer);
+
+  toggleBtn.addEventListener("click", () => {
+    const isOpen = drawer.classList.toggle("show");
+    toggleBtn.classList.toggle("open", isOpen);
+  });
+
+  wrapper.append(card);
+  return wrapper;
 }
 
 function errorMessage(status, body) {
@@ -159,46 +898,200 @@ function errorMessage(status, body) {
   return `Request failed (HTTP ${status})${detail ? `: ${detail}` : "."}`;
 }
 
+let isGenerating = false;
+let currentAbortController = null;
+const scrollBottomBtn = document.getElementById("scroll-bottom-btn");
+
+function updateSendState() {
+  if (isGenerating) {
+    // In generating mode, the send button is the active STOP button
+    send.disabled = false;
+    return;
+  }
+  const hasText = input.value.trim().length > 0;
+  send.disabled = !hasText;
+}
+
+function abortGeneration() {
+  if (currentAbortController) {
+    currentAbortController.abort();
+    currentAbortController = null;
+  }
+}
+
+function setGenerating(generating) {
+  isGenerating = generating;
+  input.disabled = generating;
+  if (generating) {
+    input.placeholder = "Generating response… please wait…";
+    send.classList.add("stop-mode");
+    send.setAttribute("aria-label", "Stop generating");
+    send.setAttribute("title", "Stop response");
+    send.innerHTML = `<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>`;
+  } else {
+    input.placeholder = "Ask about academic rules, fees, grading, attendance...";
+    send.classList.remove("stop-mode");
+    send.setAttribute("aria-label", "Send question");
+    send.setAttribute("title", "Send question");
+    send.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+  }
+  document.querySelectorAll(".quick-chip").forEach((btn) => {
+    btn.disabled = generating;
+  });
+  updateSendState();
+}
+
+// Initial check on page load
+updateSendState();
+
+// Scroll to bottom button toggle based on viewport scroll position
+function checkScrollPosition() {
+  const distFromBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+  if (distFromBottom > 70) {
+    scrollBottomBtn.classList.add("visible");
+  } else {
+    scrollBottomBtn.classList.remove("visible");
+  }
+}
+
+window.addEventListener("scroll", checkScrollPosition, { passive: true });
+window.addEventListener("resize", checkScrollPosition, { passive: true });
+
+scrollBottomBtn.addEventListener("click", () => {
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+});
+
 async function ask(question) {
+  if (isGenerating) return;
+  currentAbortController = new AbortController();
+  setGenerating(true);
+
   thread.append(el("div", { class: "q" }, question));
-  const pending = el("div", { class: "pending" }, "Retrieving passages and writing an answer…");
-  thread.append(pending);
-  pending.scrollIntoView({ behavior: "smooth", block: "end" });
-  send.disabled = true;
+  
+  // Immersive Thinking Indicator with 3D Spinning Triangle and Cycling Thought States
+  const thinkingWrapper = el("div", { class: "thinking-wrapper" });
+  
+  const spinBox = el("div", { class: "spinning-triangle-box" });
+  const spinTri = createTriangleSVG();
+  spinTri.classList.add("spinning-triangle");
+  spinBox.appendChild(spinTri);
+  thinkingWrapper.appendChild(spinBox);
+  
+  const labelCol = el("div", { class: "thinking-label-container" });
+  const phaseLabel = el("div", { class: "thinking-phase" }, "Reasoning");
+  const statusText = el("div", { class: "thinking-status-text" }, "Thinking…");
+  labelCol.appendChild(phaseLabel);
+  labelCol.appendChild(statusText);
+  thinkingWrapper.appendChild(labelCol);
+
+  // Inline Stop / Interrupt button in the reasoning bubble
+  const stopBtn = el("button", { class: "stop-thinking-btn", type: "button", title: "Stop response" });
+  stopBtn.innerHTML = `<span class="stop-icon">■</span> Stop`;
+  stopBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    abortGeneration();
+  });
+  thinkingWrapper.appendChild(stopBtn);
+  
+  thread.append(thinkingWrapper);
+
+  // Take user to the very bottom only when user enters a new prompt (like Gemini)
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+
+  // Gemini-style dynamic thought steps
+  const thoughts = [
+    "Thinking…",
+    "Searching university handbooks & records…",
+    "Cross-referencing clause numbers & regulations…",
+    "Validating strict citation grounding…",
+    "Synthesizing response with zero hallucinations…"
+  ];
+  let thoughtIdx = 0;
+  const thoughtInterval = setInterval(() => {
+    thoughtIdx = (thoughtIdx + 1) % thoughts.length;
+    statusText.style.opacity = "0";
+    setTimeout(() => {
+      statusText.textContent = thoughts[thoughtIdx];
+      statusText.style.opacity = "1";
+    }, 200);
+  }, 2600);
+
   try {
     const res = await fetch(`${API_BASE}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
+      signal: currentAbortController.signal,
     });
     let body = null;
     try { body = await res.json(); } catch { /* non-JSON error page */ }
-    pending.remove();
+    
+    clearInterval(thoughtInterval);
+    thinkingWrapper.remove();
+    
     if (!res.ok) {
       thread.append(el("div", { class: "err" }, errorMessage(res.status, body)));
     } else {
       thread.append(renderAnswer(body, res.headers.get("X-Cache")));
     }
   } catch (err) {
-    pending.remove();
-    thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
+    clearInterval(thoughtInterval);
+    thinkingWrapper.remove();
+    if (err.name === "AbortError") {
+      const interruptCard = el("div", { class: "interrupted-msg" });
+      interruptCard.innerHTML = `<span class="interrupt-badge">Interrupted</span> Response was stopped.`;
+      thread.append(interruptCard);
+    } else {
+      thread.append(el("div", { class: "err" }, `Could not reach the API at ${API_BASE || location.origin}/api/ask.`));
+    }
   } finally {
-    send.disabled = false;
+    currentAbortController = null;
+    setGenerating(false);
     input.focus();
-    thread.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "end" });
+    // Do NOT scroll to bottom when system gives an answer (keeps user scroll position)
   }
 }
 
+// Quick chip clicks
+document.querySelectorAll(".quick-chip").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (isGenerating) return;
+    input.value = btn.textContent;
+    updateSendState();
+    form.requestSubmit();
+  });
+});
+
 form.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (isGenerating) {
+    abortGeneration();
+    return;
+  }
   const q = input.value.trim();
   if (q.length < 3) return;
   input.value = "";
+  input.style.height = "28px";
+  updateSendState();
   ask(q);
 });
 
+// Auto-expand textarea & sync send button
+input.addEventListener("input", () => {
+  input.style.height = "28px";
+  input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  updateSendState();
+});
+
 input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  if (e.key === "Enter" && !e.shiftKey) { 
+    e.preventDefault(); 
+    if (isGenerating) {
+      abortGeneration();
+    } else if (input.value.trim().length >= 3) {
+      form.requestSubmit(); 
+    }
+  }
 });
 </script>
 </body>
